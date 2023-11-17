@@ -1,8 +1,14 @@
+use std::num::NonZeroU32;
+
 use chimitheque_utils::{
-    casnumber::is_cas_number, cenumber::is_ce_number, formula::empirical_formula,
+    casnumber::is_cas_number,
+    cenumber::is_ce_number,
+    formula::empirical_formula,
+    pubchem::{autocomplete, get_compound_by_name},
     requestfilter::request_filter,
 };
 
+use governor::{Quota, RateLimiter};
 use log::{debug, error, info};
 use serde::Deserialize;
 
@@ -12,10 +18,15 @@ enum Request {
     IsCeNumber(String),
     EmpiricalFormula(String),
     RequestFilter(String),
+    Autocomplete(String),
+    GetCompoundByName(String),
 }
 
 fn main() {
     env_logger::init();
+
+    // Initialize rate limiter for pubchem requests.
+    let rate_limiter = RateLimiter::direct(Quota::per_second(NonZeroU32::new(5).unwrap()));
 
     // Connect to socket.
     let context = zmq::Context::new();
@@ -70,6 +81,20 @@ fn main() {
                             Request::RequestFilter(s) => {
                                 info!("RequestFilter({s})");
                                 response = match request_filter(&s) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::Autocomplete(s) => {
+                                info!("Autocomplete({s})");
+                                response = match autocomplete(&rate_limiter, &s) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::GetCompoundByName(s) => {
+                                info!("GetcompoundByName({s})");
+                                response = match get_compound_by_name(&rate_limiter, &s) {
                                     Ok(o) => Ok(Box::new(o)),
                                     Err(e) => Err(e),
                                 };
