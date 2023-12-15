@@ -4,7 +4,7 @@ use chimitheque_utils::{
     casnumber::is_cas_number,
     cenumber::is_ce_number,
     formula::empirical_formula,
-    pubchem::{autocomplete, get_compound_by_name},
+    pubchem::{autocomplete, get_compound_by_name, get_product_by_name},
     requestfilter::request_filter,
 };
 
@@ -20,6 +20,7 @@ enum Request {
     RequestFilter(String),
     Autocomplete(String),
     GetCompoundByName(String),
+    GetProductByName(String),
 }
 
 fn main() {
@@ -93,8 +94,15 @@ fn main() {
                                 };
                             }
                             Request::GetCompoundByName(s) => {
-                                info!("GetcompoundByName({s})");
+                                info!("GetCompoundByName({s})");
                                 response = match get_compound_by_name(&rate_limiter, &s) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::GetProductByName(s) => {
+                                info!("GetProductByName({s})");
+                                response = match get_product_by_name(&rate_limiter, &s) {
                                     Ok(o) => Ok(Box::new(o)),
                                     Err(e) => Err(e),
                                 };
