@@ -3,7 +3,7 @@ use std::num::NonZeroU32;
 use chimitheque_utils::{
     casnumber::is_cas_number,
     cenumber::is_ce_number,
-    formula::empirical_formula,
+    formula::sort_empirical_formula,
     pubchem::{autocomplete, get_compound_by_name, get_product_by_name},
     requestfilter::request_filter,
 };
@@ -16,7 +16,7 @@ use serde::Deserialize;
 enum Request {
     IsCasNumber(String),
     IsCeNumber(String),
-    EmpiricalFormula(String),
+    SortEmpiricalFormula(String),
     RequestFilter(String),
     Autocomplete(String),
     GetCompoundByName(String),
@@ -72,9 +72,9 @@ fn main() {
                                     Err(e) => Err(e),
                                 };
                             }
-                            Request::EmpiricalFormula(s) => {
-                                info!("EmpiricalFormula({s})");
-                                response = match empirical_formula(&s) {
+                            Request::SortEmpiricalFormula(s) => {
+                                info!("SortEmpiricalFormula({s})");
+                                response = match sort_empirical_formula(&s) {
                                     Ok(o) => Ok(Box::new(o)),
                                     Err(e) => Err(e),
                                 };
