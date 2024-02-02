@@ -18,9 +18,9 @@ enum Request {
     IsCeNumber(String),
     SortEmpiricalFormula(String),
     RequestFilter(String),
-    Autocomplete(String),
-    GetCompoundByName(String),
-    GetProductByName(String),
+    PubchemAutocomplete(String),
+    PubchemGetCompoundByName(String),
+    PubchemGetProductByName(String),
 }
 
 fn main() {
@@ -86,22 +86,22 @@ fn main() {
                                     Err(e) => Err(e),
                                 };
                             }
-                            Request::Autocomplete(s) => {
-                                info!("Autocomplete({s})");
+                            Request::PubchemAutocomplete(s) => {
+                                info!("PubchemAutocomplete({s})");
                                 response = match autocomplete(&rate_limiter, &s) {
                                     Ok(o) => Ok(Box::new(o)),
                                     Err(e) => Err(e),
                                 };
                             }
-                            Request::GetCompoundByName(s) => {
-                                info!("GetCompoundByName({s})");
+                            Request::PubchemGetCompoundByName(s) => {
+                                info!("PubchemGetCompoundByName({s})");
                                 response = match get_compound_by_name(&rate_limiter, &s) {
                                     Ok(o) => Ok(Box::new(o)),
                                     Err(e) => Err(e),
                                 };
                             }
-                            Request::GetProductByName(s) => {
-                                info!("GetProductByName({s})");
+                            Request::PubchemGetProductByName(s) => {
+                                info!("PubchemGetProductByName({s})");
                                 response = match get_product_by_name(&rate_limiter, &s) {
                                     Ok(o) => Ok(Box::new(o)),
                                     Err(e) => Err(e),
