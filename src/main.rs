@@ -1,5 +1,6 @@
-use std::num::NonZeroU32;
+use std::{num::NonZeroU32, path::Path};
 
+use chimitheque_db::{init::connect, supplier::get_suppliers};
 use chimitheque_utils::{
     casnumber::is_cas_number,
     cenumber::is_ce_number,
@@ -8,6 +9,7 @@ use chimitheque_utils::{
     requestfilter::request_filter,
 };
 
+use clap::Parser;
 use governor::{Quota, RateLimiter};
 use log::{debug, error, info};
 use serde::Deserialize;
@@ -21,10 +23,33 @@ enum Request {
     PubchemAutocomplete(String),
     PubchemGetCompoundByName(String),
     PubchemGetProductByName(String),
+
+    DBGetSuppliers(String),
+}
+
+#[derive(Parser)]
+struct Cli {
+    /// Chimithèque database full path. example: /path/to/storage.db
+    #[arg(long)]
+    db_path: String,
 }
 
 fn main() {
     env_logger::init();
+
+    // Read parameters.
+    let cli = Cli::parse();
+
+    debug!("arg {}", cli.db_path);
+
+    // Check that the path exist.
+    if !Path::new(&cli.db_path).is_file() {
+        error!("path {} is not a file", &cli.db_path);
+        return;
+    }
+
+    // Create a connection.
+    let db_connection = connect(&cli.db_path).unwrap();
 
     // Initialize rate limiter for pubchem requests.
     let rate_limiter = RateLimiter::direct(Quota::per_second(NonZeroU32::new(5).unwrap()));
@@ -104,6 +129,18 @@ fn main() {
                                 info!("PubchemGetProductByName({s})");
                                 response = match get_product_by_name(&rate_limiter, &s) {
                                     Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetSuppliers(s) => {
+                                info!("DBGetSuppliers({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_suppliers(&db_connection, filter) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
                                     Err(e) => Err(e),
                                 };
                             }
