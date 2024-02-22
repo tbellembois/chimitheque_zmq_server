@@ -1,6 +1,6 @@
 use std::{num::NonZeroU32, path::Path};
 
-use chimitheque_db::{init::connect, supplier::get_suppliers};
+use chimitheque_db::{init::connect, supplier::get_suppliers, supplierref::get_supplierrefs};
 use chimitheque_utils::{
     casnumber::is_cas_number,
     cenumber::is_ce_number,
@@ -25,6 +25,7 @@ enum Request {
     PubchemGetProductByName(String),
 
     DBGetSuppliers(String),
+    DBGetSupplierrefs(String),
 }
 
 #[derive(Parser)]
@@ -138,6 +139,18 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_suppliers(&db_connection, filter) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetSupplierrefs(s) => {
+                                info!("DBGetSupplierrefs({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_supplierrefs(&db_connection, filter) {
                                         Ok(o) => Ok(Box::new(o)),
                                         Err(e) => Err(e.to_string()),
                                     },
