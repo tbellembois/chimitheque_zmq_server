@@ -1,6 +1,9 @@
 use std::{num::NonZeroU32, path::Path};
 
-use chimitheque_db::{init::connect, supplier::get_suppliers, supplierref::get_supplierrefs};
+use chimitheque_db::{
+    init::connect, producer::get_producers, producerref::get_producerrefs, supplier::get_suppliers,
+    supplierref::get_supplierrefs,
+};
 use chimitheque_utils::{
     casnumber::is_cas_number,
     cenumber::is_ce_number,
@@ -26,6 +29,8 @@ enum Request {
 
     DBGetSuppliers(String),
     DBGetSupplierrefs(String),
+    DBGetProducers(String),
+    DBGetProducerrefs(String),
 }
 
 #[derive(Parser)]
@@ -151,6 +156,30 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_supplierrefs(&db_connection, filter) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetProducers(s) => {
+                                info!("DBGetProducers({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_producers(&db_connection, filter) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetProducerrefs(s) => {
+                                info!("DBGetProducerrefs({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_producerrefs(&db_connection, filter) {
                                         Ok(o) => Ok(Box::new(o)),
                                         Err(e) => Err(e.to_string()),
                                     },
