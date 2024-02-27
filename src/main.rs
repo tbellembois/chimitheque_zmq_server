@@ -1,8 +1,13 @@
 use std::{num::NonZeroU32, path::Path};
 
 use chimitheque_db::{
-    init::connect, producer::get_producers, producerref::get_producerrefs, supplier::get_suppliers,
-    supplierref::get_supplierrefs,
+    basicsearch::get_many, casnumber::CasnumberStruct, category::CategoryStruct,
+    cenumber::CenumberStruct, classofcompound::ClassofcompoundStruct,
+    empiricalformula::EmpiricalformulaStruct, hazardstatement::HazardstatementStruct,
+    init::connect, linearformula::LinearformulaStruct, name::NameStruct,
+    physicalstate::PhysicalstateStruct, precautionarystatement::PrecautionarystatementStruct,
+    producer::get_producers, producerref::get_producerrefs, signalword::SignalwordStruct,
+    supplier::get_suppliers, supplierref::get_supplierrefs, symbol::SymbolStruct, tag::TagStruct,
 };
 use chimitheque_utils::{
     casnumber::is_cas_number,
@@ -31,6 +36,19 @@ enum Request {
     DBGetSupplierrefs(String),
     DBGetProducers(String),
     DBGetProducerrefs(String),
+    DBGetCasnumbers(String),
+    DBGetCenumbers(String),
+    DBGetCategories(String),
+    DBGetClassesofcompound(String),
+    DBGetEmpiricalformulas(String),
+    DBGetLinearformulas(String),
+    DBGetHazardstatements(String),
+    DBGetPrecautionarystatements(String),
+    DBGetNames(String),
+    DBGetPhysicalstates(String),
+    DBGetSymbols(String),
+    DBGetTags(String),
+    DBGetSignalwords(String),
 }
 
 #[derive(Parser)]
@@ -180,6 +198,240 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_producerrefs(&db_connection, filter) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetCasnumbers(s) => {
+                                info!("DBGetCasnumbers({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_many(
+                                        CasnumberStruct {
+                                            ..Default::default()
+                                        },
+                                        &db_connection,
+                                        filter,
+                                    ) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetCenumbers(s) => {
+                                info!("DBGetCenumbers({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_many(
+                                        CenumberStruct {
+                                            ..Default::default()
+                                        },
+                                        &db_connection,
+                                        filter,
+                                    ) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetCategories(s) => {
+                                info!("DBGetCategories({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_many(
+                                        CategoryStruct {
+                                            ..Default::default()
+                                        },
+                                        &db_connection,
+                                        filter,
+                                    ) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetClassesofcompound(s) => {
+                                info!("DBGetClassesofcompound({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_many(
+                                        ClassofcompoundStruct {
+                                            ..Default::default()
+                                        },
+                                        &db_connection,
+                                        filter,
+                                    ) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetEmpiricalformulas(s) => {
+                                info!("DBGetEmpiricalformulas({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_many(
+                                        EmpiricalformulaStruct {
+                                            ..Default::default()
+                                        },
+                                        &db_connection,
+                                        filter,
+                                    ) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetLinearformulas(s) => {
+                                info!("DBGetLinearformulas({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_many(
+                                        LinearformulaStruct {
+                                            ..Default::default()
+                                        },
+                                        &db_connection,
+                                        filter,
+                                    ) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetHazardstatements(s) => {
+                                info!("DBGetHazardstatements({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_many(
+                                        HazardstatementStruct {
+                                            ..Default::default()
+                                        },
+                                        &db_connection,
+                                        filter,
+                                    ) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetPrecautionarystatements(s) => {
+                                info!("DBGetPrecautionarystatements({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_many(
+                                        PrecautionarystatementStruct {
+                                            ..Default::default()
+                                        },
+                                        &db_connection,
+                                        filter,
+                                    ) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetNames(s) => {
+                                info!("DBGetNames({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_many(
+                                        NameStruct {
+                                            ..Default::default()
+                                        },
+                                        &db_connection,
+                                        filter,
+                                    ) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetPhysicalstates(s) => {
+                                info!("DBGetPhysicalstates({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_many(
+                                        PhysicalstateStruct {
+                                            ..Default::default()
+                                        },
+                                        &db_connection,
+                                        filter,
+                                    ) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetSymbols(s) => {
+                                info!("DBGetSymbols({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_many(
+                                        SymbolStruct {
+                                            ..Default::default()
+                                        },
+                                        &db_connection,
+                                        filter,
+                                    ) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetTags(s) => {
+                                info!("DBGetTags({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_many(
+                                        TagStruct {
+                                            ..Default::default()
+                                        },
+                                        &db_connection,
+                                        filter,
+                                    ) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetSignalwords(s) => {
+                                info!("DBGetSignalwords({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_many(
+                                        SignalwordStruct {
+                                            ..Default::default()
+                                        },
+                                        &db_connection,
+                                        filter,
+                                    ) {
                                         Ok(o) => Ok(Box::new(o)),
                                         Err(e) => Err(e.to_string()),
                                     },
