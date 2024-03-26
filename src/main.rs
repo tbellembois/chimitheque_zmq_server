@@ -1,25 +1,14 @@
 use std::{num::NonZeroU32, path::Path};
 
 use chimitheque_db::{
-    casnumber::CasnumberStruct,
-    category::CategoryStruct,
-    cenumber::CenumberStruct,
-    classofcompound::ClassofcompoundStruct,
-    empiricalformula::EmpiricalformulaStruct,
-    hazardstatement::{get_hazardstatements, HazardstatementStruct},
-    init::connect,
-    linearformula::LinearformulaStruct,
-    name::NameStruct,
-    physicalstate::PhysicalstateStruct,
-    precautionarystatement::{get_precautionarystatements, PrecautionarystatementStruct},
-    producer::get_producers,
-    producerref::get_producerrefs,
-    searchable::get_many,
-    signalword::SignalwordStruct,
-    supplier::get_suppliers,
-    supplierref::get_supplierrefs,
-    symbol::SymbolStruct,
-    tag::TagStruct,
+    casnumber::CasnumberStruct, category::CategoryStruct, cenumber::CenumberStruct,
+    classofcompound::ClassofcompoundStruct, empiricalformula::EmpiricalformulaStruct,
+    hazardstatement::get_hazardstatements, init::connect, linearformula::LinearformulaStruct,
+    name::NameStruct, physicalstate::PhysicalstateStruct,
+    precautionarystatement::get_precautionarystatements, producer::get_producers,
+    producerref::get_producerrefs, searchable::get_many, signalword::SignalwordStruct,
+    storelocation::get_storelocations, supplier::get_suppliers, supplierref::get_supplierrefs,
+    symbol::SymbolStruct, tag::TagStruct,
 };
 use chimitheque_utils::{
     casnumber::is_cas_number,
@@ -61,6 +50,8 @@ enum Request {
     DBGetSymbols(String),
     DBGetTags(String),
     DBGetSignalwords(String),
+
+    DBGetStorelocations(String, u64),
 }
 
 #[derive(Parser)]
@@ -439,6 +430,21 @@ fn main() {
                                         Ok(o) => Ok(Box::new(o)),
                                         Err(e) => Err(e.to_string()),
                                     },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetStorelocations(s, person_id) => {
+                                info!("DBGetStorelocations({s} {person_id})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => {
+                                        match get_storelocations(&db_connection, filter, person_id)
+                                        {
+                                            Ok(o) => Ok(Box::new(o)),
+                                            Err(e) => Err(e.to_string()),
+                                        }
+                                    }
                                     Err(e) => Err(e),
                                 };
                             }
