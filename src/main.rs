@@ -1,14 +1,27 @@
 use std::{num::NonZeroU32, path::Path};
 
 use chimitheque_db::{
-    casnumber::CasnumberStruct, category::CategoryStruct, cenumber::CenumberStruct,
-    classofcompound::ClassofcompoundStruct, empiricalformula::EmpiricalformulaStruct,
-    hazardstatement::get_hazardstatements, init::connect, linearformula::LinearformulaStruct,
-    name::NameStruct, physicalstate::PhysicalstateStruct,
-    precautionarystatement::get_precautionarystatements, producer::get_producers,
-    producerref::get_producerrefs, searchable::get_many, signalword::SignalwordStruct,
-    storelocation::get_storelocations, supplier::get_suppliers, supplierref::get_supplierrefs,
-    symbol::SymbolStruct, tag::TagStruct,
+    casnumber::CasnumberStruct,
+    category::CategoryStruct,
+    cenumber::CenumberStruct,
+    classofcompound::ClassofcompoundStruct,
+    empiricalformula::EmpiricalformulaStruct,
+    hazardstatement::get_hazardstatements,
+    init::connect,
+    linearformula::LinearformulaStruct,
+    name::NameStruct,
+    physicalstate::PhysicalstateStruct,
+    precautionarystatement::get_precautionarystatements,
+    producer::get_producers,
+    producerref::get_producerrefs,
+    searchable::get_many,
+    signalword::SignalwordStruct,
+    storelocation::get_storelocations,
+    supplier::get_suppliers,
+    supplierref::get_supplierrefs,
+    symbol::SymbolStruct,
+    tag::TagStruct,
+    unit::{get_units, UnitStruct},
 };
 use chimitheque_utils::{
     casnumber::is_cas_number,
@@ -50,6 +63,7 @@ enum Request {
     DBGetSymbols(String),
     DBGetTags(String),
     DBGetSignalwords(String),
+    DBGetUnits(String),
 
     DBGetStorelocations(String, u64),
 }
@@ -213,7 +227,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        CasnumberStruct {
+                                        &CasnumberStruct {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -231,7 +245,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        CenumberStruct {
+                                        &CenumberStruct {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -249,7 +263,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        CategoryStruct {
+                                        &CategoryStruct {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -267,7 +281,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        ClassofcompoundStruct {
+                                        &ClassofcompoundStruct {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -285,7 +299,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        EmpiricalformulaStruct {
+                                        &EmpiricalformulaStruct {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -303,7 +317,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        LinearformulaStruct {
+                                        &LinearformulaStruct {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -349,7 +363,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        NameStruct {
+                                        &NameStruct {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -367,7 +381,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        PhysicalstateStruct {
+                                        &PhysicalstateStruct {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -385,7 +399,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        SymbolStruct {
+                                        &SymbolStruct {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -403,12 +417,24 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        TagStruct {
+                                        &TagStruct {
                                             ..Default::default()
                                         },
                                         &db_connection,
                                         filter,
                                     ) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetUnits(s) => {
+                                info!("DBGetUnits({s})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => match get_units(&db_connection, filter) {
                                         Ok(o) => Ok(Box::new(o)),
                                         Err(e) => Err(e.to_string()),
                                     },
@@ -421,7 +447,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        SignalwordStruct {
+                                        &SignalwordStruct {
                                             ..Default::default()
                                         },
                                         &db_connection,
