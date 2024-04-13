@@ -15,5 +15,6 @@ clap = { version = "4.4", features = ["derive"] }
 
 chimitheque_utils = { path = "../chimitheque_utils" }
 chimitheque_db = { path = "../chimitheque_db" }
+chimitheque_types = { path = "../chimitheque_types" }
 erased-serde = "0.3.31"
 governor = "0.6.0"

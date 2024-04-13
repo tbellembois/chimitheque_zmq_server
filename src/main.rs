@@ -1,28 +1,17 @@
 use std::{num::NonZeroU32, path::Path};
 
 use chimitheque_db::{
-    casnumber::CasnumberStruct,
-    category::CategoryStruct,
-    cenumber::CenumberStruct,
-    classofcompound::ClassofcompoundStruct,
-    empiricalformula::EmpiricalformulaStruct,
-    hazardstatement::get_hazardstatements,
-    init::connect,
-    linearformula::LinearformulaStruct,
-    name::NameStruct,
-    physicalstate::PhysicalstateStruct,
-    precautionarystatement::get_precautionarystatements,
-    producer::get_producers,
-    producerref::get_producerrefs,
-    searchable::get_many,
-    signalword::SignalwordStruct,
-    storelocation::get_storelocations,
-    supplier::get_suppliers,
-    supplierref::get_supplierrefs,
-    symbol::SymbolStruct,
-    tag::TagStruct,
-    unit::{get_units, UnitStruct},
+    casnumber::CasnumberStruct, category::CategoryStruct, cenumber::CenumberStruct,
+    classofcompound::ClassofcompoundStruct, empiricalformula::EmpiricalformulaStruct,
+    hazardstatement::get_hazardstatements, init::connect, linearformula::LinearformulaStruct,
+    name::NameStruct, physicalstate::PhysicalstateStruct,
+    precautionarystatement::get_precautionarystatements, producer::get_producers,
+    producerref::get_producerrefs, pubchemproduct::create_product_from_pubchem,
+    searchable::get_many, signalword::SignalwordStruct, storelocation::get_storelocations,
+    supplier::get_suppliers, supplierref::get_supplierrefs, symbol::SymbolStruct, tag::TagStruct,
+    unit::get_units,
 };
+use chimitheque_types::pubchemproduct::PubchemProduct;
 use chimitheque_utils::{
     casnumber::is_cas_number,
     cenumber::is_ce_number,
@@ -45,6 +34,7 @@ enum Request {
     PubchemAutocomplete(String),
     PubchemGetCompoundByName(String),
     PubchemGetProductByName(String),
+    CreateProductFromPubchem(String, u64),
 
     DBGetSuppliers(String),
     DBGetSupplierrefs(String),
@@ -142,7 +132,7 @@ fn main() {
                                 info!("SortEmpiricalFormula({s})");
                                 response = match sort_empirical_formula(&s) {
                                     Ok(o) => Ok(Box::new(o)),
-                                    Err(e) => Err(e),
+                                    Err(e) => Err(e.to_string()),
                                 };
                             }
                             Request::RequestFilter(s) => {
@@ -473,6 +463,26 @@ fn main() {
                                     }
                                     Err(e) => Err(e),
                                 };
+                            }
+                            Request::CreateProductFromPubchem(s, person_id) => {
+                                info!("CreateProductFromPubchem({s} {person_id})");
+
+                                let mayerr_pubchem_product: Result<
+                                    PubchemProduct,
+                                    serde_json::error::Error,
+                                > = serde_json::from_str(&s);
+
+                                response = match mayerr_pubchem_product {
+                                    Ok(pubchem_product) => match create_product_from_pubchem(
+                                        &db_connection,
+                                        pubchem_product,
+                                        person_id,
+                                    ) {
+                                        Ok(product_id) => Ok(Box::new(product_id)),
+                                        Err(e) => Err(e.to_string()),
+                                    },
+                                    Err(e) => Err(e.to_string()),
+                                }
                             }
                         }
                     }

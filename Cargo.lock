@@ -200,6 +200,7 @@ name = "chimitheque_db"
 version = "0.1.0"
 dependencies = [
  "chimitheque_types",
+ "chimitheque_utils",
  "env_logger 0.11.3",
  "log",
  "rusqlite",
@@ -212,6 +213,10 @@ dependencies = [
 name = "chimitheque_types"
 version = "0.1.0"
 dependencies = [
+ "env_logger 0.10.2",
+ "jsonpath-rust",
+ "log",
+ "regex",
  "serde",
  "serde_json",
 ]
@@ -226,7 +231,6 @@ dependencies = [
  "futures",
  "governor",
  "image",
- "jsonpath-rust",
  "log",
  "regex",
  "reqwest",
@@ -241,6 +245,7 @@ name = "chimitheque_utils_service"
 version = "0.1.0"
 dependencies = [
  "chimitheque_db",
+ "chimitheque_types",
  "chimitheque_utils",
  "clap",
  "env_logger 0.10.2",
