@@ -214,7 +214,7 @@ name = "chimitheque_types"
 version = "0.1.0"
 dependencies = [
  "env_logger 0.10.2",
- "jsonpath-rust",
+ "jsonpath-rust 0.3.5",
  "log",
  "regex",
  "serde",
@@ -231,6 +231,7 @@ dependencies = [
  "futures",
  "governor",
  "image",
+ "jsonpath-rust 0.5.0",
  "log",
  "regex",
  "reqwest",
@@ -972,6 +973,21 @@ version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06cc127b7c3d270be504572364f9569761a180b981919dd0d87693a7f5fb7829"
 dependencies = [
+ "pest",
+ "pest_derive",
+ "regex",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
+name = "jsonpath-rust"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0268078319393f8430e850ee9d4706aeced256d34cf104d216bb496777137162"
+dependencies = [
+ "lazy_static",
+ "once_cell",
  "pest",
  "pest_derive",
  "regex",

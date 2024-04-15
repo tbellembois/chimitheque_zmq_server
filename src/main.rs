@@ -34,7 +34,7 @@ enum Request {
     PubchemAutocomplete(String),
     PubchemGetCompoundByName(String),
     PubchemGetProductByName(String),
-    CreateProductFromPubchem(String, u64),
+    CreateProductFromPubchem(PubchemProduct, u64),
 
     DBGetSuppliers(String),
     DBGetSupplierrefs(String),
@@ -464,23 +464,18 @@ fn main() {
                                     Err(e) => Err(e),
                                 };
                             }
-                            Request::CreateProductFromPubchem(s, person_id) => {
-                                info!("CreateProductFromPubchem({s} {person_id})");
+                            Request::CreateProductFromPubchem(pubchem_product, person_id) => {
+                                info!(
+                                    "CreateProductFromPubchem({:?} {})",
+                                    pubchem_product, person_id
+                                );
 
-                                let mayerr_pubchem_product: Result<
-                                    PubchemProduct,
-                                    serde_json::error::Error,
-                                > = serde_json::from_str(&s);
-
-                                response = match mayerr_pubchem_product {
-                                    Ok(pubchem_product) => match create_product_from_pubchem(
-                                        &db_connection,
-                                        pubchem_product,
-                                        person_id,
-                                    ) {
-                                        Ok(product_id) => Ok(Box::new(product_id)),
-                                        Err(e) => Err(e.to_string()),
-                                    },
+                                response = match create_product_from_pubchem(
+                                    &db_connection,
+                                    pubchem_product,
+                                    person_id,
+                                ) {
+                                    Ok(product_id) => Ok(Box::new(product_id)),
                                     Err(e) => Err(e.to_string()),
                                 }
                             }
@@ -496,7 +491,7 @@ fn main() {
             // Serialize response.
             match serde_json::to_string(&response) {
                 Ok(serialized_response) => {
-                    info!("response: {:#?}", serialized_response);
+                    info!("response: {}", serialized_response);
                     if let Err(e) = responder.send(&serialized_response, 0) {
                         error!("error sending response: {e}");
                     };
