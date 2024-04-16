@@ -9,7 +9,7 @@ use chimitheque_db::{
     producerref::get_producerrefs, pubchemproduct::create_product_from_pubchem,
     searchable::get_many, signalword::SignalwordStruct, storelocation::get_storelocations,
     supplier::get_suppliers, supplierref::get_supplierrefs, symbol::SymbolStruct, tag::TagStruct,
-    unit::get_units,
+    unit::get_units, updatestatement::update_ghs_statements,
 };
 use chimitheque_types::pubchemproduct::PubchemProduct;
 use chimitheque_utils::{
@@ -56,6 +56,7 @@ enum Request {
     DBGetUnits(String),
 
     DBGetStorelocations(String, u64),
+    DBUpdateGHSStatements(String),
 }
 
 #[derive(Parser)]
@@ -476,6 +477,14 @@ fn main() {
                                     person_id,
                                 ) {
                                     Ok(product_id) => Ok(Box::new(product_id)),
+                                    Err(e) => Err(e.to_string()),
+                                }
+                            }
+                            Request::DBUpdateGHSStatements(_) => {
+                                info!("DBUpdateGHSStatements");
+
+                                response = match update_ghs_statements(&db_connection) {
+                                    Ok(_) => Ok(Box::new(())),
                                     Err(e) => Err(e.to_string()),
                                 }
                             }
