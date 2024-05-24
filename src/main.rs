@@ -1,17 +1,20 @@
-use std::{num::NonZeroU32, path::Path};
-
 use chimitheque_db::{
-    casnumber::CasnumberStruct, category::CategoryStruct, cenumber::CenumberStruct,
-    classofcompound::ClassofcompoundStruct, empiricalformula::EmpiricalformulaStruct,
-    hazardstatement::get_hazardstatements, init::connect, linearformula::LinearformulaStruct,
-    name::NameStruct, physicalstate::PhysicalstateStruct,
+    casnumber::CasnumberWrapper, category::CategoryWrapper, cenumber::CenumberWrapper,
+    classofcompound::ClassofcompoundWrapper, empiricalformula::EmpiricalformulaWrapper,
+    hazardstatement::get_hazardstatements, init::connect, linearformula::LinearformulaWrapper,
+    name::NameWrapper, physicalstate::PhysicalstateWrapper,
     precautionarystatement::get_precautionarystatements, producer::get_producers,
     producerref::get_producerrefs, pubchemproduct::create_product_from_pubchem,
-    searchable::get_many, signalword::SignalwordStruct, storelocation::get_storelocations,
-    supplier::get_suppliers, supplierref::get_supplierrefs, symbol::SymbolStruct, tag::TagStruct,
+    searchable::get_many, signalword::SignalwordWrapper, storelocation::get_storelocations,
+    supplier::get_suppliers, supplierref::get_supplierrefs, symbol::SymbolWrapper, tag::TagWrapper,
     unit::get_units, updatestatement::update_ghs_statements,
 };
-use chimitheque_types::pubchemproduct::PubchemProduct;
+use chimitheque_types::{
+    casnumber::Casnumber, category::Category, cenumber::Cenumber, classofcompound::Classofcompound,
+    empiricalformula::Empiricalformula, linearformula::Linearformula, name::Name,
+    physicalstate::Physicalstate, pubchemproduct::PubchemProduct, signalword::Signalword,
+    symbol::Symbol, tag::Tag,
+};
 use chimitheque_utils::{
     casnumber::is_cas_number,
     cenumber::is_ce_number,
@@ -19,6 +22,7 @@ use chimitheque_utils::{
     pubchem::{autocomplete, get_compound_by_name, get_product_by_name},
     requestfilter::request_filter,
 };
+use std::{num::NonZeroU32, path::Path};
 
 use clap::Parser;
 use governor::{Quota, RateLimiter};
@@ -218,7 +222,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &CasnumberStruct {
+                                        &CasnumberWrapper {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -236,7 +240,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &CenumberStruct {
+                                        &CenumberWrapper {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -254,7 +258,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &CategoryStruct {
+                                        &CategoryWrapper {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -272,7 +276,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &ClassofcompoundStruct {
+                                        &ClassofcompoundWrapper {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -290,7 +294,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &EmpiricalformulaStruct {
+                                        &EmpiricalformulaWrapper {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -308,7 +312,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &LinearformulaStruct {
+                                        &LinearformulaWrapper {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -354,7 +358,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &NameStruct {
+                                        &NameWrapper {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -372,7 +376,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &PhysicalstateStruct {
+                                        &PhysicalstateWrapper {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -390,7 +394,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &SymbolStruct {
+                                        &SymbolWrapper {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -408,7 +412,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &TagStruct {
+                                        &TagWrapper {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -438,7 +442,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &SignalwordStruct {
+                                        &SignalwordWrapper {
                                             ..Default::default()
                                         },
                                         &db_connection,
