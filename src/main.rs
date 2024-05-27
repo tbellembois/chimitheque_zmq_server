@@ -1,13 +1,9 @@
 use chimitheque_db::{
-    casnumber::CasnumberWrapper, category::CategoryWrapper, cenumber::CenumberWrapper,
-    classofcompound::ClassofcompoundWrapper, empiricalformula::EmpiricalformulaWrapper,
-    hazardstatement::get_hazardstatements, init::connect, linearformula::LinearformulaWrapper,
-    name::NameWrapper, physicalstate::PhysicalstateWrapper,
+    hazardstatement::get_hazardstatements, init::connect,
     precautionarystatement::get_precautionarystatements, producer::get_producers,
     producerref::get_producerrefs, pubchemproduct::create_product_from_pubchem,
-    searchable::get_many, signalword::SignalwordWrapper, storelocation::get_storelocations,
-    supplier::get_suppliers, supplierref::get_supplierrefs, symbol::SymbolWrapper, tag::TagWrapper,
-    unit::get_units, updatestatement::update_ghs_statements,
+    searchable::get_many, storelocation::get_storelocations, supplier::get_suppliers,
+    supplierref::get_supplierrefs, unit::get_units, updatestatement::update_ghs_statements,
 };
 use chimitheque_types::{
     casnumber::Casnumber, category::Category, cenumber::Cenumber, classofcompound::Classofcompound,
@@ -222,7 +218,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &CasnumberWrapper {
+                                        &Casnumber {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -240,7 +236,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &CenumberWrapper {
+                                        &Cenumber {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -258,7 +254,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &CategoryWrapper {
+                                        &Category {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -276,7 +272,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &ClassofcompoundWrapper {
+                                        &Classofcompound {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -294,7 +290,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &EmpiricalformulaWrapper {
+                                        &Empiricalformula {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -312,7 +308,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &LinearformulaWrapper {
+                                        &Linearformula {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -358,7 +354,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &NameWrapper {
+                                        &Name {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -376,7 +372,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &PhysicalstateWrapper {
+                                        &Physicalstate {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -394,7 +390,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &SymbolWrapper {
+                                        &Symbol {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -412,7 +408,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &TagWrapper {
+                                        &Tag {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -442,7 +438,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &SignalwordWrapper {
+                                        &Signalword {
                                             ..Default::default()
                                         },
                                         &db_connection,
