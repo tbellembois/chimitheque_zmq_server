@@ -1,9 +1,10 @@
 use chimitheque_db::{
     hazardstatement::get_hazardstatements, init::connect,
     precautionarystatement::get_precautionarystatements, producer::get_producers,
-    producerref::get_producerrefs, pubchemproduct::create_product_from_pubchem,
-    searchable::get_many, storelocation::get_storelocations, supplier::get_suppliers,
-    supplierref::get_supplierrefs, unit::get_units, updatestatement::update_ghs_statements,
+    producerref::get_producerrefs, product::get_products,
+    pubchemproduct::create_product_from_pubchem, searchable::get_many,
+    storelocation::get_storelocations, supplier::get_suppliers, supplierref::get_supplierrefs,
+    unit::get_units, updatestatement::update_ghs_statements,
 };
 use chimitheque_types::{
     casnumber::Casnumber, category::Category, cenumber::Cenumber, classofcompound::Classofcompound,
@@ -56,6 +57,7 @@ enum Request {
     DBGetUnits(String),
 
     DBGetStorelocations(String, u64),
+    DBGetProducts(String, u64),
     DBUpdateGHSStatements(String),
 }
 
@@ -458,6 +460,20 @@ fn main() {
                                     Ok(filter) => {
                                         match get_storelocations(&db_connection, filter, person_id)
                                         {
+                                            Ok(o) => Ok(Box::new(o)),
+                                            Err(e) => Err(e.to_string()),
+                                        }
+                                    }
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetProducts(s, person_id) => {
+                                info!("DBGetProducts({s} {person_id})");
+                                let mayerr_filter = request_filter(&s);
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => {
+                                        match get_products(&db_connection, filter, person_id) {
                                             Ok(o) => Ok(Box::new(o)),
                                             Err(e) => Err(e.to_string()),
                                         }
