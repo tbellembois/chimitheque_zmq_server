@@ -9,15 +9,14 @@ use chimitheque_db::{
 use chimitheque_types::{
     casnumber::Casnumber, category::Category, cenumber::Cenumber, classofcompound::Classofcompound,
     empiricalformula::Empiricalformula, linearformula::Linearformula, name::Name,
-    physicalstate::Physicalstate, pubchemproduct::PubchemProduct, signalword::Signalword,
-    symbol::Symbol, tag::Tag,
+    physicalstate::Physicalstate, pubchemproduct::PubchemProduct, requestfilter::RequestFilter,
+    signalword::Signalword, symbol::Symbol, tag::Tag,
 };
 use chimitheque_utils::{
     casnumber::is_cas_number,
     cenumber::is_ce_number,
     formula::sort_empirical_formula,
     pubchem::{autocomplete, get_compound_by_name, get_product_by_name},
-    requestfilter::request_filter,
 };
 use std::{num::NonZeroU32, path::Path};
 
@@ -140,7 +139,7 @@ fn main() {
                             }
                             Request::RequestFilter(s) => {
                                 info!("RequestFilter({s})");
-                                response = match request_filter(&s) {
+                                response = match RequestFilter::try_from(s.as_str()) {
                                     Ok(o) => Ok(Box::new(o)),
                                     Err(e) => Err(e),
                                 };
@@ -168,7 +167,7 @@ fn main() {
                             }
                             Request::DBGetSuppliers(s) => {
                                 info!("DBGetSuppliers({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_suppliers(&db_connection, filter) {
@@ -180,7 +179,7 @@ fn main() {
                             }
                             Request::DBGetSupplierrefs(s) => {
                                 info!("DBGetSupplierrefs({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_supplierrefs(&db_connection, filter) {
@@ -192,7 +191,7 @@ fn main() {
                             }
                             Request::DBGetProducers(s) => {
                                 info!("DBGetProducers({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_producers(&db_connection, filter) {
@@ -204,7 +203,7 @@ fn main() {
                             }
                             Request::DBGetProducerrefs(s) => {
                                 info!("DBGetProducerrefs({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_producerrefs(&db_connection, filter) {
@@ -216,7 +215,7 @@ fn main() {
                             }
                             Request::DBGetCasnumbers(s) => {
                                 info!("DBGetCasnumbers({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
@@ -234,7 +233,7 @@ fn main() {
                             }
                             Request::DBGetCenumbers(s) => {
                                 info!("DBGetCenumbers({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
@@ -252,7 +251,7 @@ fn main() {
                             }
                             Request::DBGetCategories(s) => {
                                 info!("DBGetCategories({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
@@ -270,7 +269,7 @@ fn main() {
                             }
                             Request::DBGetClassesofcompound(s) => {
                                 info!("DBGetClassesofcompound({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
@@ -288,7 +287,7 @@ fn main() {
                             }
                             Request::DBGetEmpiricalformulas(s) => {
                                 info!("DBGetEmpiricalformulas({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
@@ -306,7 +305,7 @@ fn main() {
                             }
                             Request::DBGetLinearformulas(s) => {
                                 info!("DBGetLinearformulas({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
@@ -324,7 +323,7 @@ fn main() {
                             }
                             Request::DBGetHazardstatements(s) => {
                                 info!("DBGetHazardstatements({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => {
@@ -338,7 +337,7 @@ fn main() {
                             }
                             Request::DBGetPrecautionarystatements(s) => {
                                 info!("DBGetPrecautionarystatements({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => {
@@ -352,7 +351,7 @@ fn main() {
                             }
                             Request::DBGetNames(s) => {
                                 info!("DBGetNames({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
@@ -370,7 +369,7 @@ fn main() {
                             }
                             Request::DBGetPhysicalstates(s) => {
                                 info!("DBGetPhysicalstates({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
@@ -388,7 +387,7 @@ fn main() {
                             }
                             Request::DBGetSymbols(s) => {
                                 info!("DBGetSymbols({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
@@ -406,7 +405,7 @@ fn main() {
                             }
                             Request::DBGetTags(s) => {
                                 info!("DBGetTags({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
@@ -424,7 +423,7 @@ fn main() {
                             }
                             Request::DBGetUnits(s) => {
                                 info!("DBGetUnits({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_units(&db_connection, filter) {
@@ -436,7 +435,7 @@ fn main() {
                             }
                             Request::DBGetSignalwords(s) => {
                                 info!("DBGetSignalwords({s})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
@@ -454,7 +453,7 @@ fn main() {
                             }
                             Request::DBGetStorelocations(s, person_id) => {
                                 info!("DBGetStorelocations({s} {person_id})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => {
@@ -469,7 +468,7 @@ fn main() {
                             }
                             Request::DBGetProducts(s, person_id) => {
                                 info!("DBGetProducts({s} {person_id})");
-                                let mayerr_filter = request_filter(&s);
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
                                     Ok(filter) => {
@@ -516,7 +515,7 @@ fn main() {
             // Serialize response.
             match serde_json::to_string(&response) {
                 Ok(serialized_response) => {
-                    info!("response: {}", serialized_response);
+                    debug!("response: {}", serialized_response);
                     if let Err(e) = responder.send(&serialized_response, 0) {
                         error!("error sending response: {e}");
                     };
