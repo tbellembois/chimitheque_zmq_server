@@ -1,16 +1,16 @@
 use chimitheque_db::{
-    hazardstatement::get_hazardstatements, init::connect,
-    precautionarystatement::get_precautionarystatements, producer::get_producers,
-    producerref::get_producerrefs, product::get_products,
+    hazardstatement::get_hazard_statements, init::connect,
+    precautionarystatement::get_precautionary_statements, producer::get_producers,
+    producerref::get_producer_refs, product::get_products,
     pubchemproduct::create_product_from_pubchem, searchable::get_many,
-    storelocation::get_storelocations, supplier::get_suppliers, supplierref::get_supplierrefs,
+    storelocation::get_store_locations, supplier::get_suppliers, supplierref::get_supplier_refs,
     unit::get_units, updatestatement::update_ghs_statements,
 };
 use chimitheque_types::{
-    casnumber::Casnumber, category::Category, cenumber::Cenumber, classofcompound::Classofcompound,
-    empiricalformula::Empiricalformula, linearformula::Linearformula, name::Name,
-    physicalstate::Physicalstate, pubchemproduct::PubchemProduct, requestfilter::RequestFilter,
-    signalword::Signalword, symbol::Symbol, tag::Tag,
+    casnumber::CasNumber, category::Category, cenumber::CeNumber, classofcompound::ClassOfCompound,
+    empiricalformula::EmpiricalFormula, linearformula::LinearFormula, name::Name,
+    physicalstate::PhysicalState, pubchemproduct::PubchemProduct, requestfilter::RequestFilter,
+    signalword::SignalWord, symbol::Symbol, tag::Tag,
 };
 use chimitheque_utils::{
     casnumber::is_cas_number,
@@ -182,7 +182,7 @@ fn main() {
                                 let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
-                                    Ok(filter) => match get_supplierrefs(&db_connection, filter) {
+                                    Ok(filter) => match get_supplier_refs(&db_connection, filter) {
                                         Ok(o) => Ok(Box::new(o)),
                                         Err(e) => Err(e.to_string()),
                                     },
@@ -206,7 +206,7 @@ fn main() {
                                 let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
-                                    Ok(filter) => match get_producerrefs(&db_connection, filter) {
+                                    Ok(filter) => match get_producer_refs(&db_connection, filter) {
                                         Ok(o) => Ok(Box::new(o)),
                                         Err(e) => Err(e.to_string()),
                                     },
@@ -219,7 +219,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &Casnumber {
+                                        &CasNumber {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -237,7 +237,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &Cenumber {
+                                        &CeNumber {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -273,7 +273,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &Classofcompound {
+                                        &ClassOfCompound {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -291,7 +291,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &Empiricalformula {
+                                        &EmpiricalFormula {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -309,7 +309,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &Linearformula {
+                                        &LinearFormula {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -327,7 +327,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => {
-                                        match get_hazardstatements(&db_connection, filter) {
+                                        match get_hazard_statements(&db_connection, filter) {
                                             Ok(o) => Ok(Box::new(o)),
                                             Err(e) => Err(e.to_string()),
                                         }
@@ -341,7 +341,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => {
-                                        match get_precautionarystatements(&db_connection, filter) {
+                                        match get_precautionary_statements(&db_connection, filter) {
                                             Ok(o) => Ok(Box::new(o)),
                                             Err(e) => Err(e.to_string()),
                                         }
@@ -373,7 +373,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &Physicalstate {
+                                        &PhysicalState {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -439,7 +439,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => match get_many(
-                                        &Signalword {
+                                        &SignalWord {
                                             ..Default::default()
                                         },
                                         &db_connection,
@@ -457,7 +457,7 @@ fn main() {
 
                                 response = match mayerr_filter {
                                     Ok(filter) => {
-                                        match get_storelocations(&db_connection, filter, person_id)
+                                        match get_store_locations(&db_connection, filter, person_id)
                                         {
                                             Ok(o) => Ok(Box::new(o)),
                                             Err(e) => Err(e.to_string()),
