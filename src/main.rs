@@ -1,16 +1,25 @@
 use chimitheque_db::{
-    hazardstatement::get_hazard_statements, init::connect,
-    precautionarystatement::get_precautionary_statements, producer::get_producers,
-    producerref::get_producer_refs, product::get_products,
-    pubchemproduct::create_product_from_pubchem, searchable::get_many,
-    storelocation::get_store_locations, supplier::get_suppliers, supplierref::get_supplier_refs,
-    unit::get_units, updatestatement::update_ghs_statements,
+    hazardstatement::get_hazard_statements,
+    init::connect,
+    person::get_people,
+    precautionarystatement::get_precautionary_statements,
+    producer::get_producers,
+    producerref::get_producer_refs,
+    product::get_products,
+    pubchemproduct::create_product_from_pubchem,
+    searchable::get_many,
+    stock::compute_stock,
+    storelocation::{create_store_location, get_store_locations, update_store_location},
+    supplier::get_suppliers,
+    supplierref::get_supplier_refs,
+    unit::get_units,
+    updatestatement::update_ghs_statements,
 };
 use chimitheque_types::{
     casnumber::CasNumber, category::Category, cenumber::CeNumber, classofcompound::ClassOfCompound,
     empiricalformula::EmpiricalFormula, linearformula::LinearFormula, name::Name,
     physicalstate::PhysicalState, pubchemproduct::PubchemProduct, requestfilter::RequestFilter,
-    signalword::SignalWord, symbol::Symbol, tag::Tag,
+    signalword::SignalWord, storelocation::StoreLocation, symbol::Symbol, tag::Tag,
 };
 use chimitheque_utils::{
     casnumber::is_cas_number,
@@ -55,9 +64,15 @@ enum Request {
     DBGetSignalwords(String),
     DBGetUnits(String),
 
+    DBComputeStock(u64, u64),
+
     DBGetStorelocations(String, u64),
     DBGetProducts(String, u64),
-    DBUpdateGHSStatements(String),
+    DBGetPeople(String, u64),
+    DBUpdateGHSStatements(),
+
+    DBCreateStorelocation(StoreLocation),
+    DBUpdateStorelocation(StoreLocation),
 }
 
 #[derive(Parser)]
@@ -102,7 +117,7 @@ fn main() {
         if let Err(e) = responder.recv(&mut maybe_raw_message, 0) {
             error!("error receiving message: {e}");
         } else {
-            debug!("maybe_raw_message: {:?}", maybe_raw_message.as_str());
+            debug!("maybe_raw_message: {:#?}", maybe_raw_message.as_str());
 
             // FIXME: change default response.
             let mut response: Result<Box<dyn erased_serde::Serialize>, String> =
@@ -480,6 +495,20 @@ fn main() {
                                     Err(e) => Err(e),
                                 };
                             }
+                            Request::DBGetPeople(s, person_id) => {
+                                info!("DBGetPeople({s} {person_id})");
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => {
+                                        match get_people(&db_connection, filter, person_id) {
+                                            Ok(o) => Ok(Box::new(o)),
+                                            Err(e) => Err(e.to_string()),
+                                        }
+                                    }
+                                    Err(e) => Err(e),
+                                };
+                            }
                             Request::CreateProductFromPubchem(pubchem_product, person_id) => {
                                 info!(
                                     "CreateProductFromPubchem({:?} {})",
@@ -495,13 +524,40 @@ fn main() {
                                     Err(e) => Err(e.to_string()),
                                 }
                             }
-                            Request::DBUpdateGHSStatements(_) => {
+                            Request::DBUpdateGHSStatements() => {
                                 info!("DBUpdateGHSStatements");
 
                                 response = match update_ghs_statements(&db_connection) {
                                     Ok(_) => Ok(Box::new(())),
                                     Err(e) => Err(e.to_string()),
                                 }
+                            }
+                            Request::DBCreateStorelocation(store_location) => {
+                                info!("DBCreateStorelocation({:?})", store_location);
+
+                                response =
+                                    match create_store_location(&db_connection, store_location) {
+                                        Ok(store_location_id) => Ok(Box::new(store_location_id)),
+                                        Err(e) => Err(e.to_string()),
+                                    }
+                            }
+                            Request::DBUpdateStorelocation(store_location) => {
+                                info!("DBUpdateStorelocation({:?})", store_location);
+
+                                response =
+                                    match update_store_location(&db_connection, store_location) {
+                                        Ok(_) => Ok(Box::new(())),
+                                        Err(e) => Err(e.to_string()),
+                                    }
+                            }
+                            Request::DBComputeStock(product_id, person_id) => {
+                                info!("DBComputeStock({} {})", product_id, person_id);
+
+                                response =
+                                    match compute_stock(&db_connection, product_id, person_id) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    }
                             }
                         }
                     }
