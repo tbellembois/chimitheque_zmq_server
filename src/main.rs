@@ -6,7 +6,7 @@ use chimitheque_db::{
     producer::get_producers,
     producerref::get_producer_refs,
     product::get_products,
-    pubchemproduct::create_product_from_pubchem,
+    pubchemproduct::create_update_product_from_pubchem,
     searchable::get_many,
     stock::compute_stock,
     storelocation::{create_store_location, get_store_locations, update_store_location},
@@ -43,8 +43,8 @@ enum Request {
     PubchemAutocomplete(String),
     PubchemGetCompoundByName(String),
     PubchemGetProductByName(String),
-    CreateProductFromPubchem(PubchemProduct, u64),
 
+    DBCreateUpdateProductFromPubchem(PubchemProduct, u64, Option<u64>),
     DBGetSuppliers(String),
     DBGetSupplierrefs(String),
     DBGetProducers(String),
@@ -509,16 +509,21 @@ fn main() {
                                     Err(e) => Err(e),
                                 };
                             }
-                            Request::CreateProductFromPubchem(pubchem_product, person_id) => {
+                            Request::DBCreateUpdateProductFromPubchem(
+                                pubchem_product,
+                                person_id,
+                                maybe_product_id,
+                            ) => {
                                 info!(
-                                    "CreateProductFromPubchem({:?} {})",
-                                    pubchem_product, person_id
+                                    "DBCreateUpdateProductFromPubchem({:?} {} {:?})",
+                                    pubchem_product, person_id, maybe_product_id
                                 );
 
-                                response = match create_product_from_pubchem(
+                                response = match create_update_product_from_pubchem(
                                     &db_connection,
                                     pubchem_product,
                                     person_id,
+                                    maybe_product_id,
                                 ) {
                                     Ok(product_id) => Ok(Box::new(product_id)),
                                     Err(e) => Err(e.to_string()),
