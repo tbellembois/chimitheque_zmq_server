@@ -69,7 +69,7 @@ enum Request {
     DBGetStorelocations(String, u64),
     DBGetProducts(String, u64),
     DBGetPeople(String, u64),
-    DBUpdateGHSStatements(),
+    DBUpdateGHSStatements(String),
 
     DBCreateStorelocation(StoreLocation),
     DBUpdateStorelocation(StoreLocation),
@@ -529,7 +529,7 @@ fn main() {
                                     Err(e) => Err(e.to_string()),
                                 }
                             }
-                            Request::DBUpdateGHSStatements() => {
+                            Request::DBUpdateGHSStatements(_s) => {
                                 info!("DBUpdateGHSStatements");
 
                                 response = match update_ghs_statements(&db_connection) {
