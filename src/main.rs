@@ -9,7 +9,7 @@ use chimitheque_db::{
     pubchemproduct::create_update_product_from_pubchem,
     searchable::get_many,
     stock::compute_stock,
-    storelocation::{create_store_location, get_store_locations, update_store_location},
+    storelocation::{create_update_store_location, get_store_locations},
     supplier::get_suppliers,
     supplierref::get_supplier_refs,
     unit::get_units,
@@ -71,8 +71,9 @@ enum Request {
     DBGetPeople(String, u64),
     DBUpdateGHSStatements(String),
 
-    DBCreateStorelocation(StoreLocation),
-    DBUpdateStorelocation(StoreLocation),
+    // DBCreateStorelocation(StoreLocation),
+    // DBUpdateStorelocation(StoreLocation),
+    DBCreateUpdateStorelocation(StoreLocation),
 }
 
 #[derive(Parser)]
@@ -537,24 +538,35 @@ fn main() {
                                     Err(e) => Err(e.to_string()),
                                 }
                             }
-                            Request::DBCreateStorelocation(store_location) => {
-                                info!("DBCreateStorelocation({:?})", store_location);
+                            Request::DBCreateUpdateStorelocation(store_location) => {
+                                info!("DBCreateUpdateStorelocation({:?})", store_location);
 
-                                response =
-                                    match create_store_location(&db_connection, store_location) {
-                                        Ok(store_location_id) => Ok(Box::new(store_location_id)),
-                                        Err(e) => Err(e.to_string()),
-                                    }
+                                response = match create_update_store_location(
+                                    &db_connection,
+                                    store_location,
+                                ) {
+                                    Ok(store_location_id) => Ok(Box::new(store_location_id)),
+                                    Err(e) => Err(e.to_string()),
+                                }
                             }
-                            Request::DBUpdateStorelocation(store_location) => {
-                                info!("DBUpdateStorelocation({:?})", store_location);
-
-                                response =
-                                    match update_store_location(&db_connection, store_location) {
-                                        Ok(_) => Ok(Box::new(())),
-                                        Err(e) => Err(e.to_string()),
-                                    }
-                            }
+                            // Request::DBCreateStorelocation(store_location) => {
+                            //     info!("DBCreateStorelocation({:?})", store_location);
+                            //
+                            //     response =
+                            //         match create_store_location(&db_connection, store_location) {
+                            //             Ok(store_location_id) => Ok(Box::new(store_location_id)),
+                            //             Err(e) => Err(e.to_string()),
+                            //         }
+                            // }
+                            // Request::DBUpdateStorelocation(store_location) => {
+                            //     info!("DBUpdateStorelocation({:?})", store_location);
+                            //
+                            //     response =
+                            //         match update_store_location(&db_connection, store_location) {
+                            //             Ok(_) => Ok(Box::new(())),
+                            //             Err(e) => Err(e.to_string()),
+                            //         }
+                            // }
                             Request::DBComputeStock(product_id, person_id) => {
                                 info!("DBComputeStock({} {})", product_id, person_id);
 
