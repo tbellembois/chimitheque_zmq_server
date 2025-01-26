@@ -9,7 +9,7 @@ use chimitheque_db::{
     pubchemproduct::create_update_product_from_pubchem,
     searchable::get_many,
     stock::compute_stock,
-    storelocation::{create_update_store_location, get_store_locations},
+    storelocation::{create_update_store_location, delete_store_location, get_store_locations},
     supplier::get_suppliers,
     supplierref::get_supplier_refs,
     unit::get_units,
@@ -17,9 +17,11 @@ use chimitheque_db::{
 };
 use chimitheque_types::{
     casnumber::CasNumber, category::Category, cenumber::CeNumber, classofcompound::ClassOfCompound,
-    empiricalformula::EmpiricalFormula, linearformula::LinearFormula, name::Name,
-    physicalstate::PhysicalState, pubchemproduct::PubchemProduct, requestfilter::RequestFilter,
-    signalword::SignalWord, storelocation::StoreLocation, symbol::Symbol, tag::Tag,
+    empiricalformula::EmpiricalFormula, hazardstatement::HazardStatement,
+    linearformula::LinearFormula, name::Name, physicalstate::PhysicalState,
+    precautionarystatement::PrecautionaryStatement, pubchemproduct::PubchemProduct,
+    requestfilter::RequestFilter, signalword::SignalWord, storelocation::StoreLocation,
+    symbol::Symbol, tag::Tag,
 };
 use chimitheque_utils::{
     casnumber::is_cas_number,
@@ -50,23 +52,32 @@ enum Request {
     DBGetProducers(String),
     DBGetProducerrefs(String),
     DBGetCasnumbers(String),
+    DBGetCasnumber(u64),
     DBGetCenumbers(String),
+    DBGetCenumber(u64),
     DBGetCategories(String),
     DBGetClassesofcompound(String),
     DBGetEmpiricalformulas(String),
+    DBGetEmpiricalformula(u64),
     DBGetLinearformulas(String),
     DBGetHazardstatements(String),
+    DBGetHazardstatement(u64),
     DBGetPrecautionarystatements(String),
+    DBGetPrecautionarystatement(u64),
     DBGetNames(String),
+    DBGetName(u64),
     DBGetPhysicalstates(String),
     DBGetSymbols(String),
+    DBGetSymbol(u64),
     DBGetTags(String),
     DBGetSignalwords(String),
+    DBGetSignalword(u64),
     DBGetUnits(String),
 
     DBComputeStock(u64, u64),
 
     DBGetStorelocations(String, u64),
+    DBDeleteStorelocation(u64),
     DBGetProducts(String, u64),
     DBGetPeople(String, u64),
     DBUpdateGHSStatements(String),
@@ -468,7 +479,7 @@ fn main() {
                                 };
                             }
                             Request::DBGetStorelocations(s, person_id) => {
-                                info!("DBGetStorelocations({s} {person_id})");
+                                info!("DBGetStoreLocations({s} {person_id})");
                                 let mayerr_filter = RequestFilter::try_from(s.as_str());
 
                                 response = match mayerr_filter {
@@ -480,6 +491,17 @@ fn main() {
                                         }
                                     }
                                     Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBDeleteStorelocation(store_location_id) => {
+                                info!("DBDeleteStoreLocation({store_location_id})");
+
+                                response = match delete_store_location(
+                                    &db_connection,
+                                    store_location_id,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
                                 };
                             }
                             Request::DBGetProducts(s, person_id) => {
@@ -576,6 +598,116 @@ fn main() {
                                         Err(e) => Err(e.to_string()),
                                     }
                             }
+                            Request::DBGetCasnumber(id) => {
+                                info!("DBGetCasnumber({id})");
+                                let filter = RequestFilter {
+                                    id: Some(id),
+                                    ..Default::default()
+                                };
+
+                                response = match get_many(
+                                    &CasNumber {
+                                        ..Default::default()
+                                    },
+                                    &db_connection,
+                                    filter,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBGetCenumber(id) => {
+                                info!("DBGetCenumber({id})");
+                                let filter = RequestFilter {
+                                    id: Some(id),
+                                    ..Default::default()
+                                };
+
+                                response = match get_many(
+                                    &CeNumber {
+                                        ..Default::default()
+                                    },
+                                    &db_connection,
+                                    filter,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBGetEmpiricalformula(id) => {
+                                info!("DBGetEmpiricalformula({id})");
+                                let filter = RequestFilter {
+                                    id: Some(id),
+                                    ..Default::default()
+                                };
+
+                                response = match get_many(
+                                    &EmpiricalFormula {
+                                        ..Default::default()
+                                    },
+                                    &db_connection,
+                                    filter,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBGetHazardstatement(id) => {
+                                info!("DBGetHazardstatement({id})");
+                                let filter = RequestFilter {
+                                    id: Some(id),
+                                    ..Default::default()
+                                };
+
+                                response = match get_many(
+                                    &HazardStatement {
+                                        ..Default::default()
+                                    },
+                                    &db_connection,
+                                    filter,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBGetPrecautionarystatement(id) => {
+                                info!("DBGetPrecautionarystatement({id})");
+                                let filter = RequestFilter {
+                                    id: Some(id),
+                                    ..Default::default()
+                                };
+
+                                response = match get_many(
+                                    &PrecautionaryStatement {
+                                        ..Default::default()
+                                    },
+                                    &db_connection,
+                                    filter,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBGetName(id) => {
+                                info!("DBGetName({id})");
+                                let filter = RequestFilter {
+                                    id: Some(id),
+                                    ..Default::default()
+                                };
+
+                                response = match get_many(
+                                    &Name {
+                                        ..Default::default()
+                                    },
+                                    &db_connection,
+                                    filter,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBGetSymbol(_) => todo!(),
+                            Request::DBGetSignalword(_) => todo!(),
                         }
                     }
                     Err(e) => {
