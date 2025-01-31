@@ -3,14 +3,14 @@ use chimitheque_db::{
     init::connect,
     person::get_people,
     precautionarystatement::get_precautionary_statements,
-    producer::get_producers,
+    producer::{create_update_producer, get_producers},
     producerref::get_producer_refs,
     product::get_products,
     pubchemproduct::create_update_product_from_pubchem,
     searchable::get_many,
     stock::compute_stock,
     storelocation::{create_update_store_location, delete_store_location, get_store_locations},
-    supplier::get_suppliers,
+    supplier::{create_update_supplier, get_suppliers},
     supplierref::get_supplier_refs,
     unit::get_units,
     updatestatement::update_ghs_statements,
@@ -19,9 +19,9 @@ use chimitheque_types::{
     casnumber::CasNumber, category::Category, cenumber::CeNumber, classofcompound::ClassOfCompound,
     empiricalformula::EmpiricalFormula, hazardstatement::HazardStatement,
     linearformula::LinearFormula, name::Name, physicalstate::PhysicalState,
-    precautionarystatement::PrecautionaryStatement, pubchemproduct::PubchemProduct,
-    requestfilter::RequestFilter, signalword::SignalWord, storelocation::StoreLocation,
-    symbol::Symbol, tag::Tag,
+    precautionarystatement::PrecautionaryStatement, producer::Producer,
+    pubchemproduct::PubchemProduct, requestfilter::RequestFilter, signalword::SignalWord,
+    storelocation::StoreLocation, supplier::Supplier, symbol::Symbol, tag::Tag,
 };
 use chimitheque_utils::{
     casnumber::is_cas_number,
@@ -82,9 +82,9 @@ enum Request {
     DBGetPeople(String, u64),
     DBUpdateGHSStatements(String),
 
-    // DBCreateStorelocation(StoreLocation),
-    // DBUpdateStorelocation(StoreLocation),
     DBCreateUpdateStorelocation(StoreLocation),
+    DBCreateUpdateProducer(Producer),
+    DBCreateUpdateSupplier(Supplier),
 }
 
 #[derive(Parser)]
@@ -571,24 +571,6 @@ fn main() {
                                     Err(e) => Err(e.to_string()),
                                 }
                             }
-                            // Request::DBCreateStorelocation(store_location) => {
-                            //     info!("DBCreateStorelocation({:?})", store_location);
-                            //
-                            //     response =
-                            //         match create_store_location(&db_connection, store_location) {
-                            //             Ok(store_location_id) => Ok(Box::new(store_location_id)),
-                            //             Err(e) => Err(e.to_string()),
-                            //         }
-                            // }
-                            // Request::DBUpdateStorelocation(store_location) => {
-                            //     info!("DBUpdateStorelocation({:?})", store_location);
-                            //
-                            //     response =
-                            //         match update_store_location(&db_connection, store_location) {
-                            //             Ok(_) => Ok(Box::new(())),
-                            //             Err(e) => Err(e.to_string()),
-                            //         }
-                            // }
                             Request::DBComputeStock(product_id, person_id) => {
                                 info!("DBComputeStock({} {})", product_id, person_id);
 
@@ -706,8 +688,58 @@ fn main() {
                                     Err(e) => Err(e.to_string()),
                                 };
                             }
-                            Request::DBGetSymbol(_) => todo!(),
-                            Request::DBGetSignalword(_) => todo!(),
+                            Request::DBGetSymbol(id) => {
+                                info!("DBGetSymbol({id})");
+                                let filter = RequestFilter {
+                                    id: Some(id),
+                                    ..Default::default()
+                                };
+
+                                response = match get_many(
+                                    &Symbol {
+                                        ..Default::default()
+                                    },
+                                    &db_connection,
+                                    filter,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBGetSignalword(id) => {
+                                info!("DBGetSignalword({id})");
+                                let filter = RequestFilter {
+                                    id: Some(id),
+                                    ..Default::default()
+                                };
+
+                                response = match get_many(
+                                    &SignalWord {
+                                        ..Default::default()
+                                    },
+                                    &db_connection,
+                                    filter,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBCreateUpdateProducer(producer) => {
+                                info!("DBCreateUpdateProducer({:?})", producer);
+
+                                response = match create_update_producer(&db_connection, producer) {
+                                    Ok(producer_id) => Ok(Box::new(producer_id)),
+                                    Err(e) => Err(e.to_string()),
+                                }
+                            }
+                            Request::DBCreateUpdateSupplier(supplier) => {
+                                info!("DBCreateUpdateSupplier({:?})", supplier);
+
+                                response = match create_update_supplier(&db_connection, supplier) {
+                                    Ok(supplier_id) => Ok(Box::new(supplier_id)),
+                                    Err(e) => Err(e.to_string()),
+                                }
+                            }
                         }
                     }
                     Err(e) => {
