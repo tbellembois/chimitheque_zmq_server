@@ -28,6 +28,7 @@ use chimitheque_utils::{
     cenumber::is_ce_number,
     formula::sort_empirical_formula,
     pubchem::{autocomplete, get_compound_by_name, get_product_by_name},
+    string::{clean, Transform},
 };
 use std::{num::NonZeroU32, path::Path};
 
@@ -563,9 +564,13 @@ fn main() {
                             Request::DBCreateUpdateStorelocation(store_location) => {
                                 info!("DBCreateUpdateStorelocation({:?})", store_location);
 
+                                let mut clean_store_location = store_location.clone();
+                                clean_store_location.store_location_name =
+                                    clean(&store_location.store_location_name, Transform::None);
+
                                 response = match create_update_store_location(
                                     &db_connection,
-                                    store_location,
+                                    clean_store_location,
                                 ) {
                                     Ok(store_location_id) => Ok(Box::new(store_location_id)),
                                     Err(e) => Err(e.to_string()),
@@ -727,18 +732,28 @@ fn main() {
                             Request::DBCreateUpdateProducer(producer) => {
                                 info!("DBCreateUpdateProducer({:?})", producer);
 
-                                response = match create_update_producer(&db_connection, producer) {
-                                    Ok(producer_id) => Ok(Box::new(producer_id)),
-                                    Err(e) => Err(e.to_string()),
-                                }
+                                let mut clean_producer = producer.clone();
+                                clean_producer.producer_label =
+                                    clean(&producer.producer_label, Transform::None);
+
+                                response =
+                                    match create_update_producer(&db_connection, clean_producer) {
+                                        Ok(producer_id) => Ok(Box::new(producer_id)),
+                                        Err(e) => Err(e.to_string()),
+                                    }
                             }
                             Request::DBCreateUpdateSupplier(supplier) => {
                                 info!("DBCreateUpdateSupplier({:?})", supplier);
 
-                                response = match create_update_supplier(&db_connection, supplier) {
-                                    Ok(supplier_id) => Ok(Box::new(supplier_id)),
-                                    Err(e) => Err(e.to_string()),
-                                }
+                                let mut clean_supplier = supplier.clone();
+                                clean_supplier.supplier_label =
+                                    clean(&supplier.supplier_label, Transform::None);
+
+                                response =
+                                    match create_update_supplier(&db_connection, clean_supplier) {
+                                        Ok(supplier_id) => Ok(Box::new(supplier_id)),
+                                        Err(e) => Err(e.to_string()),
+                                    }
                             }
                         }
                     }
