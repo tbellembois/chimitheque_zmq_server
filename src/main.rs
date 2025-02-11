@@ -1,4 +1,5 @@
 use chimitheque_db::{
+    entity::get_entities,
     hazardstatement::get_hazard_statements,
     init::connect,
     person::get_people,
@@ -79,6 +80,7 @@ enum Request {
 
     DBGetStorelocations(String, u64),
     DBDeleteStorelocation(u64),
+    DBGetEntities(String, u64),
     DBGetProducts(String, u64),
     DBGetPeople(String, u64),
     DBUpdateGHSStatements(String),
@@ -476,6 +478,20 @@ fn main() {
                                         Ok(o) => Ok(Box::new(o)),
                                         Err(e) => Err(e.to_string()),
                                     },
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetEntities(s, person_id) => {
+                                info!("DBGetEntities({s} {person_id})");
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => {
+                                        match get_entities(&db_connection, filter, person_id) {
+                                            Ok(o) => Ok(Box::new(o)),
+                                            Err(e) => Err(e.to_string()),
+                                        }
+                                    }
                                     Err(e) => Err(e),
                                 };
                             }
