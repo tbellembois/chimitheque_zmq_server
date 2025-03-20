@@ -54,26 +54,18 @@ enum Request {
     DBGetProducers(String),
     DBGetProducerrefs(String),
     DBGetCasnumbers(String),
-    DBGetCasnumber(u64),
     DBGetCenumbers(String),
-    DBGetCenumber(u64),
     DBGetCategories(String),
     DBGetClassesofcompound(String),
     DBGetEmpiricalformulas(String),
-    DBGetEmpiricalformula(u64),
     DBGetLinearformulas(String),
     DBGetHazardstatements(String),
-    DBGetHazardstatement(u64),
     DBGetPrecautionarystatements(String),
-    DBGetPrecautionarystatement(u64),
     DBGetNames(String),
-    DBGetName(u64),
     DBGetPhysicalstates(String),
     DBGetSymbols(String),
-    DBGetSymbol(u64),
     DBGetTags(String),
     DBGetSignalwords(String),
-    DBGetSignalword(u64),
     DBGetUnits(String),
 
     DBComputeStock(u64, u64),
@@ -600,150 +592,6 @@ fn main() {
                                         Ok(o) => Ok(Box::new(o)),
                                         Err(e) => Err(e.to_string()),
                                     }
-                            }
-                            Request::DBGetCasnumber(id) => {
-                                info!("DBGetCasnumber({id})");
-                                let filter = RequestFilter {
-                                    id: Some(id),
-                                    ..Default::default()
-                                };
-
-                                response = match get_many(
-                                    &CasNumber {
-                                        ..Default::default()
-                                    },
-                                    &db_connection,
-                                    filter,
-                                ) {
-                                    Ok(o) => Ok(Box::new(o)),
-                                    Err(e) => Err(e.to_string()),
-                                };
-                            }
-                            Request::DBGetCenumber(id) => {
-                                info!("DBGetCenumber({id})");
-                                let filter = RequestFilter {
-                                    id: Some(id),
-                                    ..Default::default()
-                                };
-
-                                response = match get_many(
-                                    &CeNumber {
-                                        ..Default::default()
-                                    },
-                                    &db_connection,
-                                    filter,
-                                ) {
-                                    Ok(o) => Ok(Box::new(o)),
-                                    Err(e) => Err(e.to_string()),
-                                };
-                            }
-                            Request::DBGetEmpiricalformula(id) => {
-                                info!("DBGetEmpiricalformula({id})");
-                                let filter = RequestFilter {
-                                    id: Some(id),
-                                    ..Default::default()
-                                };
-
-                                response = match get_many(
-                                    &EmpiricalFormula {
-                                        ..Default::default()
-                                    },
-                                    &db_connection,
-                                    filter,
-                                ) {
-                                    Ok(o) => Ok(Box::new(o)),
-                                    Err(e) => Err(e.to_string()),
-                                };
-                            }
-                            Request::DBGetHazardstatement(id) => {
-                                info!("DBGetHazardstatement({id})");
-                                let filter = RequestFilter {
-                                    id: Some(id),
-                                    ..Default::default()
-                                };
-
-                                response = match get_many(
-                                    &HazardStatement {
-                                        ..Default::default()
-                                    },
-                                    &db_connection,
-                                    filter,
-                                ) {
-                                    Ok(o) => Ok(Box::new(o)),
-                                    Err(e) => Err(e.to_string()),
-                                };
-                            }
-                            Request::DBGetPrecautionarystatement(id) => {
-                                info!("DBGetPrecautionarystatement({id})");
-                                let filter = RequestFilter {
-                                    id: Some(id),
-                                    ..Default::default()
-                                };
-
-                                response = match get_many(
-                                    &PrecautionaryStatement {
-                                        ..Default::default()
-                                    },
-                                    &db_connection,
-                                    filter,
-                                ) {
-                                    Ok(o) => Ok(Box::new(o)),
-                                    Err(e) => Err(e.to_string()),
-                                };
-                            }
-                            Request::DBGetName(id) => {
-                                info!("DBGetName({id})");
-                                let filter = RequestFilter {
-                                    id: Some(id),
-                                    ..Default::default()
-                                };
-
-                                response = match get_many(
-                                    &Name {
-                                        ..Default::default()
-                                    },
-                                    &db_connection,
-                                    filter,
-                                ) {
-                                    Ok(o) => Ok(Box::new(o)),
-                                    Err(e) => Err(e.to_string()),
-                                };
-                            }
-                            Request::DBGetSymbol(id) => {
-                                info!("DBGetSymbol({id})");
-                                let filter = RequestFilter {
-                                    id: Some(id),
-                                    ..Default::default()
-                                };
-
-                                response = match get_many(
-                                    &Symbol {
-                                        ..Default::default()
-                                    },
-                                    &db_connection,
-                                    filter,
-                                ) {
-                                    Ok(o) => Ok(Box::new(o)),
-                                    Err(e) => Err(e.to_string()),
-                                };
-                            }
-                            Request::DBGetSignalword(id) => {
-                                info!("DBGetSignalword({id})");
-                                let filter = RequestFilter {
-                                    id: Some(id),
-                                    ..Default::default()
-                                };
-
-                                response = match get_many(
-                                    &SignalWord {
-                                        ..Default::default()
-                                    },
-                                    &db_connection,
-                                    filter,
-                                ) {
-                                    Ok(o) => Ok(Box::new(o)),
-                                    Err(e) => Err(e.to_string()),
-                                };
                             }
                             Request::DBCreateUpdateProducer(producer) => {
                                 info!("DBCreateUpdateProducer({:?})", producer);
