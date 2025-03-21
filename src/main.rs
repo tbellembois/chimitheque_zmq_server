@@ -18,11 +18,10 @@ use chimitheque_db::{
 };
 use chimitheque_types::{
     casnumber::CasNumber, category::Category, cenumber::CeNumber, classofcompound::ClassOfCompound,
-    empiricalformula::EmpiricalFormula, hazardstatement::HazardStatement,
-    linearformula::LinearFormula, name::Name, physicalstate::PhysicalState,
-    precautionarystatement::PrecautionaryStatement, producer::Producer,
-    pubchemproduct::PubchemProduct, requestfilter::RequestFilter, signalword::SignalWord,
-    storelocation::StoreLocation, supplier::Supplier, symbol::Symbol, tag::Tag,
+    empiricalformula::EmpiricalFormula, linearformula::LinearFormula, name::Name,
+    physicalstate::PhysicalState, producer::Producer, pubchemproduct::PubchemProduct,
+    requestfilter::RequestFilter, signalword::SignalWord, storelocation::StoreLocation,
+    supplier::Supplier, symbol::Symbol, tag::Tag,
 };
 use chimitheque_utils::{
     casnumber::is_cas_number,
