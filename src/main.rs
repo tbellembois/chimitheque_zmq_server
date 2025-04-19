@@ -103,7 +103,18 @@ fn main() {
     }
 
     // Create a connection.
+    info!("Connecting to DB.");
     let db_connection = connect(&cli.db_path).unwrap();
+
+    // Handle Ctrl+C.
+    // ctrlc::set_handler(move || {
+    //     // Close DB connection.
+    //     match db_connection.close() {
+    //         Ok(_) => info!("Closing DB."),
+    //         Err(e) => error!("Error closing DB: {:?}", e),
+    //     }
+    // })
+    // .expect("Error setting Ctrl-C handler");
 
     // Initialize rate limiter for pubchem requests.
     let rate_limiter = RateLimiter::direct(Quota::per_second(NonZeroU32::new(5).unwrap()));
