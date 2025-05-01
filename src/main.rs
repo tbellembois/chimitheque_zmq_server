@@ -1,4 +1,5 @@
 use chimitheque_db::{
+    bookmark::toggle_product_bookmark,
     entity::get_entities,
     hazardstatement::get_hazard_statements,
     init::connect,
@@ -79,6 +80,8 @@ enum Request {
     DBCreateUpdateStorelocation(StoreLocation),
     DBCreateUpdateProducer(Producer),
     DBCreateUpdateSupplier(Supplier),
+
+    DBToggleProductBookmark(u64, u64),
 }
 
 #[derive(Parser)]
@@ -628,6 +631,18 @@ fn main() {
                                         Ok(supplier_id) => Ok(Box::new(supplier_id)),
                                         Err(e) => Err(e.to_string()),
                                     }
+                            }
+                            Request::DBToggleProductBookmark(person_id, product_id) => {
+                                info!("DBToggleProductBookmark({:?},{:?})", person_id, product_id);
+
+                                response = match toggle_product_bookmark(
+                                    &db_connection,
+                                    person_id,
+                                    product_id,
+                                ) {
+                                    Ok(()) => Ok(Box::new(())),
+                                    Err(e) => Err(e.to_string()),
+                                }
                             }
                         }
                     }
