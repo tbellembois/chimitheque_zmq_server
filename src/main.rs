@@ -1,5 +1,6 @@
 use chimitheque_db::{
     bookmark::toggle_product_bookmark,
+    borrowing::toggle_storage_borrowing,
     entity::get_entities,
     hazardstatement::get_hazard_statements,
     init::connect,
@@ -82,6 +83,7 @@ enum Request {
     DBCreateUpdateSupplier(Supplier),
 
     DBToggleProductBookmark(u64, u64),
+    DBToggleStorageBorrowing(u64, u64, u64, Option<String>),
 }
 
 #[derive(Parser)]
@@ -639,6 +641,28 @@ fn main() {
                                     &db_connection,
                                     person_id,
                                     product_id,
+                                ) {
+                                    Ok(()) => Ok(Box::new(())),
+                                    Err(e) => Err(e.to_string()),
+                                }
+                            }
+                            Request::DBToggleStorageBorrowing(
+                                person_id,
+                                storage_id,
+                                borrower_id,
+                                borrower_comment,
+                            ) => {
+                                info!(
+                                    "DBToggleStorageBorrowing({:?},{:?},{:?},{:?})",
+                                    person_id, storage_id, borrower_id, borrower_comment
+                                );
+
+                                response = match toggle_storage_borrowing(
+                                    &db_connection,
+                                    person_id,
+                                    storage_id,
+                                    borrower_id,
+                                    borrower_comment,
                                 ) {
                                     Ok(()) => Ok(Box::new(())),
                                     Err(e) => Err(e.to_string()),
