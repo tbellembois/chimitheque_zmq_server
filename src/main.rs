@@ -12,6 +12,7 @@ use chimitheque_db::{
     pubchemproduct::create_update_product_from_pubchem,
     searchable::get_many,
     stock::compute_stock,
+    storage::get_storages,
     storelocation::{create_update_store_location, delete_store_location, get_store_locations},
     supplier::{create_update_supplier, get_suppliers},
     supplierref::get_supplier_refs,
@@ -75,6 +76,7 @@ enum Request {
     DBDeleteStorelocation(u64),
     DBGetEntities(String, u64),
     DBGetProducts(String, u64),
+    DBGetStorages(String, u64),
     DBGetPeople(String, u64),
     DBUpdateGHSStatements(String),
 
@@ -535,6 +537,20 @@ fn main() {
                                 response = match mayerr_filter {
                                     Ok(filter) => {
                                         match get_products(&db_connection, filter, person_id) {
+                                            Ok(o) => Ok(Box::new(o)),
+                                            Err(e) => Err(e.to_string()),
+                                        }
+                                    }
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBGetStorages(s, person_id) => {
+                                info!("DBGetStorages({s} {person_id})");
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => {
+                                        match get_storages(&db_connection, filter, person_id) {
                                             Ok(o) => Ok(Box::new(o)),
                                             Err(e) => Err(e.to_string()),
                                         }
