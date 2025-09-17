@@ -111,7 +111,7 @@ fn main() {
 
     // Create a connection.
     info!("Connecting to DB.");
-    let db_connection = connect(&cli.db_path).unwrap();
+    let mut db_connection = connect(&cli.db_path).unwrap();
 
     // Handle Ctrl+C.
     // ctrlc::set_handler(move || {
@@ -583,19 +583,19 @@ fn main() {
                                 );
 
                                 response = match create_update_product_from_pubchem(
-                                    &db_connection,
+                                    &mut db_connection,
                                     pubchem_product,
                                     person_id,
                                     maybe_product_id,
                                 ) {
                                     Ok(product_id) => Ok(Box::new(product_id)),
                                     Err(e) => Err(e.to_string()),
-                                }
+                                };
                             }
                             Request::DBUpdateGHSStatements(_s) => {
                                 info!("DBUpdateGHSStatements");
 
-                                response = match update_ghs_statements(&db_connection) {
+                                response = match update_ghs_statements(&mut db_connection) {
                                     Ok(_) => Ok(Box::new(())),
                                     Err(e) => Err(e.to_string()),
                                 }
@@ -608,7 +608,7 @@ fn main() {
                                     clean(&store_location.store_location_name, Transform::None);
 
                                 response = match create_update_store_location(
-                                    &db_connection,
+                                    &mut db_connection,
                                     clean_store_location,
                                 ) {
                                     Ok(store_location_id) => Ok(Box::new(store_location_id)),
@@ -632,7 +632,8 @@ fn main() {
                                     clean(&producer.producer_label, Transform::None);
 
                                 response =
-                                    match create_update_producer(&db_connection, clean_producer) {
+                                    match create_update_producer(&mut db_connection, clean_producer)
+                                    {
                                         Ok(producer_id) => Ok(Box::new(producer_id)),
                                         Err(e) => Err(e.to_string()),
                                     }
@@ -645,7 +646,8 @@ fn main() {
                                     clean(&supplier.supplier_label, Transform::None);
 
                                 response =
-                                    match create_update_supplier(&db_connection, clean_supplier) {
+                                    match create_update_supplier(&mut db_connection, clean_supplier)
+                                    {
                                         Ok(supplier_id) => Ok(Box::new(supplier_id)),
                                         Err(e) => Err(e.to_string()),
                                     }
@@ -654,7 +656,7 @@ fn main() {
                                 info!("DBToggleProductBookmark({:?},{:?})", person_id, product_id);
 
                                 response = match toggle_product_bookmark(
-                                    &db_connection,
+                                    &mut db_connection,
                                     person_id,
                                     product_id,
                                 ) {
@@ -674,7 +676,7 @@ fn main() {
                                 );
 
                                 response = match toggle_storage_borrowing(
-                                    &db_connection,
+                                    &mut db_connection,
                                     person_id,
                                     storage_id,
                                     borrower_id,
