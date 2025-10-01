@@ -6,15 +6,15 @@ use chimitheque_db::{
     init::connect,
     person::get_people,
     precautionarystatement::get_precautionary_statements,
-    producer::{create_update_producer, get_producers},
+    producer::get_producers,
     producerref::get_producer_refs,
-    product::get_products,
+    product::{create_update_product, get_products},
     pubchemproduct::create_update_product_from_pubchem,
-    searchable::get_many,
+    searchable::{self, get_many},
     stock::compute_stock,
     storage::get_storages,
     storelocation::{create_update_store_location, delete_store_location, get_store_locations},
-    supplier::{create_update_supplier, get_suppliers},
+    supplier::get_suppliers,
     supplierref::get_supplier_refs,
     unit::get_units,
     updatestatement::update_ghs_statements,
@@ -22,9 +22,9 @@ use chimitheque_db::{
 use chimitheque_types::{
     casnumber::CasNumber, category::Category, cenumber::CeNumber, classofcompound::ClassOfCompound,
     empiricalformula::EmpiricalFormula, linearformula::LinearFormula, name::Name,
-    physicalstate::PhysicalState, producer::Producer, pubchemproduct::PubchemProduct,
-    requestfilter::RequestFilter, signalword::SignalWord, storelocation::StoreLocation,
-    supplier::Supplier, symbol::Symbol, tag::Tag,
+    physicalstate::PhysicalState, producer::Producer, product::Product,
+    pubchemproduct::PubchemProduct, requestfilter::RequestFilter, signalword::SignalWord,
+    storelocation::StoreLocation, supplier::Supplier, symbol::Symbol, tag::Tag,
 };
 use chimitheque_utils::{
     casnumber::is_cas_number,
@@ -81,6 +81,7 @@ enum Request {
     DBUpdateGHSStatements(String),
 
     DBCreateUpdateStorelocation(StoreLocation),
+    DBCreateUpdateProduct(Product),
     DBCreateUpdateProducer(Producer),
     DBCreateUpdateSupplier(Supplier),
 
@@ -600,6 +601,15 @@ fn main() {
                                     Err(e) => Err(e.to_string()),
                                 }
                             }
+                            Request::DBCreateUpdateProduct(product) => {
+                                info!("DBCreateUpdateProduct({:?})", product);
+
+                                response = match create_update_product(&mut db_connection, product)
+                                {
+                                    Ok(product_id) => Ok(Box::new(product_id)),
+                                    Err(e) => Err(e.to_string()),
+                                }
+                            }
                             Request::DBCreateUpdateStorelocation(store_location) => {
                                 info!("DBCreateUpdateStorelocation({:?})", store_location);
 
@@ -627,30 +637,34 @@ fn main() {
                             Request::DBCreateUpdateProducer(producer) => {
                                 info!("DBCreateUpdateProducer({:?})", producer);
 
-                                let mut clean_producer = producer.clone();
-                                clean_producer.producer_label =
-                                    clean(&producer.producer_label, Transform::None);
-
-                                response =
-                                    match create_update_producer(&mut db_connection, clean_producer)
-                                    {
-                                        Ok(producer_id) => Ok(Box::new(producer_id)),
-                                        Err(e) => Err(e.to_string()),
-                                    }
+                                response = match searchable::create_update(
+                                    &Producer {
+                                        ..Default::default()
+                                    },
+                                    None,
+                                    &db_connection,
+                                    &producer.producer_label,
+                                    Transform::None,
+                                ) {
+                                    Ok(producer_id) => Ok(Box::new(producer_id)),
+                                    Err(e) => Err(e.to_string()),
+                                }
                             }
                             Request::DBCreateUpdateSupplier(supplier) => {
                                 info!("DBCreateUpdateSupplier({:?})", supplier);
 
-                                let mut clean_supplier = supplier.clone();
-                                clean_supplier.supplier_label =
-                                    clean(&supplier.supplier_label, Transform::None);
-
-                                response =
-                                    match create_update_supplier(&mut db_connection, clean_supplier)
-                                    {
-                                        Ok(supplier_id) => Ok(Box::new(supplier_id)),
-                                        Err(e) => Err(e.to_string()),
-                                    }
+                                response = match searchable::create_update(
+                                    &Supplier {
+                                        ..Default::default()
+                                    },
+                                    None,
+                                    &db_connection,
+                                    &supplier.supplier_label,
+                                    Transform::None,
+                                ) {
+                                    Ok(supplier_id) => Ok(Box::new(supplier_id)),
+                                    Err(e) => Err(e.to_string()),
+                                }
                             }
                             Request::DBToggleProductBookmark(person_id, product_id) => {
                                 info!("DBToggleProductBookmark({:?},{:?})", person_id, product_id);
