@@ -12,7 +12,7 @@ use chimitheque_db::{
     pubchemproduct::create_update_product_from_pubchem,
     searchable::{self, get_many},
     stock::compute_stock,
-    storage::get_storages,
+    storage::{create_update_storage, get_storages},
     storelocation::{create_update_store_location, delete_store_location, get_store_locations},
     supplier::get_suppliers,
     supplierref::get_supplier_refs,
@@ -24,7 +24,7 @@ use chimitheque_types::{
     empiricalformula::EmpiricalFormula, linearformula::LinearFormula, name::Name,
     physicalstate::PhysicalState, producer::Producer, product::Product,
     pubchemproduct::PubchemProduct, requestfilter::RequestFilter, signalword::SignalWord,
-    storelocation::StoreLocation, supplier::Supplier, symbol::Symbol, tag::Tag,
+    storage::Storage, storelocation::StoreLocation, supplier::Supplier, symbol::Symbol, tag::Tag,
 };
 use chimitheque_utils::{
     casnumber::is_cas_number,
@@ -82,6 +82,7 @@ enum Request {
 
     DBCreateUpdateStorelocation(StoreLocation),
     DBCreateUpdateProduct(Product),
+    DBCreateUpdateStorage(Storage, u64, bool),
     DBCreateUpdateProducer(Producer),
     DBCreateUpdateSupplier(Supplier),
 
@@ -607,6 +608,23 @@ fn main() {
                                 response = match create_update_product(&mut db_connection, product)
                                 {
                                     Ok(product_id) => Ok(Box::new(product_id)),
+                                    Err(e) => Err(e.to_string()),
+                                }
+                            }
+                            Request::DBCreateUpdateStorage(
+                                storage,
+                                nb_items,
+                                identical_barecode,
+                            ) => {
+                                info!("DBCreateUpdateStorage({:?})", storage);
+
+                                response = match create_update_storage(
+                                    &mut db_connection,
+                                    storage,
+                                    nb_items,
+                                    identical_barecode,
+                                ) {
+                                    Ok(storage_ids) => Ok(Box::new(storage_ids)),
                                     Err(e) => Err(e.to_string()),
                                 }
                             }
