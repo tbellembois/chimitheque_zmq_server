@@ -1,18 +1,23 @@
 use chimitheque_db::{
     bookmark::toggle_product_bookmark,
     borrowing::toggle_storage_borrowing,
-    entity::get_entities,
+    entity::{create_update_entity, get_entities},
     hazardstatement::get_hazard_statements,
-    init::connect,
-    person::get_people,
+    init::{connect, connect_and_init_db},
+    person::{
+        create_update_person, delete_person, get_admins, get_people, set_person_admin,
+        unset_person_admin,
+    },
     precautionarystatement::get_precautionary_statements,
     producer::get_producers,
     producerref::get_producer_refs,
-    product::{create_update_product, get_products},
+    product::{create_update_product, delete_product, get_products},
     pubchemproduct::create_update_product_from_pubchem,
     searchable::{self, get_many},
     stock::compute_stock,
-    storage::{create_update_storage, get_storages},
+    storage::{
+        archive_storage, create_update_storage, delete_storage, get_storages, unarchive_storage,
+    },
     storelocation::{create_update_store_location, delete_store_location, get_store_locations},
     supplier::get_suppliers,
     supplierref::get_supplier_refs,
@@ -21,8 +26,8 @@ use chimitheque_db::{
 };
 use chimitheque_types::{
     casnumber::CasNumber, category::Category, cenumber::CeNumber, classofcompound::ClassOfCompound,
-    empiricalformula::EmpiricalFormula, linearformula::LinearFormula, name::Name,
-    physicalstate::PhysicalState, producer::Producer, product::Product,
+    empiricalformula::EmpiricalFormula, entity::Entity, linearformula::LinearFormula, name::Name,
+    person::Person, physicalstate::PhysicalState, producer::Producer, product::Product,
     pubchemproduct::PubchemProduct, requestfilter::RequestFilter, signalword::SignalWord,
     storage::Storage, storelocation::StoreLocation, supplier::Supplier, symbol::Symbol, tag::Tag,
 };
@@ -50,6 +55,7 @@ enum Request {
     PubchemGetCompoundByName(String),
     PubchemGetProductByName(String),
 
+    DBConnectAndInitDB(String),
     DBCreateUpdateProductFromPubchem(PubchemProduct, u64, Option<u64>),
     DBGetSuppliers(String),
     DBGetSupplierrefs(String),
@@ -79,12 +85,22 @@ enum Request {
     DBGetStorages(String, u64),
     DBGetPeople(String, u64),
     DBUpdateGHSStatements(String),
+    DBCreateUpdateEntity(Entity),
 
     DBCreateUpdateStorelocation(StoreLocation),
     DBCreateUpdateProduct(Product),
     DBCreateUpdateStorage(Storage, u64, bool),
     DBCreateUpdateProducer(Producer),
     DBCreateUpdateSupplier(Supplier),
+    DBCreateUpdatePerson(Person),
+    DBSetPersonAdmin(u64),
+    DBUnsetPersonAdmin(u64),
+    DBDeletePerson(u64),
+    DBDeleteProduct(u64),
+    DBDeleteStorage(u64),
+    DBArchiveStorage(u64),
+    DBUnarchiveStorage(u64),
+    DBGetAdmins(String),
 
     DBToggleProductBookmark(u64, u64),
     DBToggleStorageBorrowing(u64, u64, u64, Option<String>),
@@ -105,10 +121,9 @@ fn main() {
 
     debug!("arg {}", cli.db_path);
 
-    // Check that the path exist.
+    // Check that DB file exist, create if not..
     if !Path::new(&cli.db_path).is_file() {
-        error!("path {} is not a file", &cli.db_path);
-        return;
+        connect_and_init_db(&cli.db_path).expect("can not create DB");
     }
 
     // Create a connection.
@@ -611,6 +626,14 @@ fn main() {
                                     Err(e) => Err(e.to_string()),
                                 }
                             }
+                            Request::DBCreateUpdatePerson(person) => {
+                                info!("DBCreateUpdatePerson({:?})", person);
+
+                                response = match create_update_person(&mut db_connection, person) {
+                                    Ok(person_id) => Ok(Box::new(person_id)),
+                                    Err(e) => Err(e.to_string()),
+                                }
+                            }
                             Request::DBCreateUpdateStorage(
                                 storage,
                                 nb_items,
@@ -717,6 +740,86 @@ fn main() {
                                     Ok(()) => Ok(Box::new(())),
                                     Err(e) => Err(e.to_string()),
                                 }
+                            }
+                            Request::DBSetPersonAdmin(person_id) => {
+                                info!("DBSetPersonAdmin({:?})", person_id);
+
+                                response = match set_person_admin(&mut db_connection, person_id) {
+                                    Ok(()) => Ok(Box::new(())),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBUnsetPersonAdmin(person_id) => {
+                                info!("DBUnsetPersonAdmin({:?})", person_id);
+
+                                response = match unset_person_admin(&mut db_connection, person_id) {
+                                    Ok(()) => Ok(Box::new(())),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBConnectAndInitDB(db_path) => {
+                                info!("DBConnectAndInitDB({:?})", db_path);
+
+                                response = match connect_and_init_db(db_path.as_str()) {
+                                    Ok(()) => Ok(Box::new(())),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBCreateUpdateEntity(entity) => {
+                                info!("DBCreateUpdateEntity({:?})", entity);
+
+                                response = match create_update_entity(&mut db_connection, entity) {
+                                    Ok(entity_id) => Ok(Box::new(entity_id)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBDeletePerson(person_id) => {
+                                info!("DBDeletePerson({:?})", person_id);
+
+                                response = match delete_person(&mut db_connection, person_id) {
+                                    Ok(()) => Ok(Box::new(())),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBDeleteProduct(product_id) => {
+                                info!("DBDeleteProduct({:?})", product_id);
+
+                                response = match delete_product(&mut db_connection, product_id) {
+                                    Ok(()) => Ok(Box::new(())),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBDeleteStorage(storage_id) => {
+                                info!("DBDeleteStorage({:?})", storage_id);
+
+                                response = match delete_storage(&mut db_connection, storage_id) {
+                                    Ok(()) => Ok(Box::new(())),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBArchiveStorage(storage_id) => {
+                                info!("DBArchiveStorage({:?})", storage_id);
+
+                                response = match archive_storage(&mut db_connection, storage_id) {
+                                    Ok(()) => Ok(Box::new(())),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBUnarchiveStorage(storage_id) => {
+                                info!("DBUnarchiveStorage({:?})", storage_id);
+
+                                response = match unarchive_storage(&mut db_connection, storage_id) {
+                                    Ok(()) => Ok(Box::new(())),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBGetAdmins(_s) => {
+                                info!("DBGetAdmins()");
+
+                                response = match get_admins(&mut db_connection) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
                             }
                         }
                     }
