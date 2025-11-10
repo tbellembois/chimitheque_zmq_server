@@ -1,9 +1,16 @@
 use chimitheque_db::{
     bookmark::toggle_product_bookmark,
     borrowing::toggle_storage_borrowing,
-    entity::{create_update_entity, get_entities},
+    casbin::{
+        match_entity_has_members, match_entity_has_store_locations, match_person_is_admin,
+        match_person_is_in_entity, match_person_is_in_person_entity,
+        match_person_is_in_storage_entity, match_person_is_in_store_location_entity,
+        match_person_is_manager, match_product_has_storages, match_store_location_has_children,
+        match_store_location_has_storages,
+    },
+    entity::{create_update_entity, delete_entity, get_entities},
     hazardstatement::get_hazard_statements,
-    init::{connect, connect_and_init_db},
+    init::{connect, init_db},
     person::{
         create_update_person, delete_person, get_admins, get_people, set_person_admin,
         unset_person_admin,
@@ -55,7 +62,6 @@ enum Request {
     PubchemGetCompoundByName(String),
     PubchemGetProductByName(String),
 
-    DBConnectAndInitDB(String),
     DBCreateUpdateProductFromPubchem(PubchemProduct, u64, Option<u64>),
     DBGetSuppliers(String),
     DBGetSupplierrefs(String),
@@ -98,12 +104,25 @@ enum Request {
     DBDeletePerson(u64),
     DBDeleteProduct(u64),
     DBDeleteStorage(u64),
+    DBDeleteEntity(u64),
     DBArchiveStorage(u64),
     DBUnarchiveStorage(u64),
     DBGetAdmins(String),
 
     DBToggleProductBookmark(u64, u64),
     DBToggleStorageBorrowing(u64, u64, u64, Option<String>),
+
+    CasbinMatchPersonIsInEntity(u64, u64),
+    CasbinMatchPersonIsInPersonEntity(u64, u64),
+    CasbinMatchPersonIsInStoreLocationEntity(u64, u64),
+    CasbinMatchPersonIsInStorageEntity(u64, u64),
+    CasbinMatchProductHasStorages(u64),
+    CasbinMatchStoreLocationHasChildren(u64),
+    CasbinMatchStoreLocationHasStorages(u64),
+    CasbinMatchPersonIsAdmin(u64),
+    CasbinMatchPersonIsManager(u64),
+    CasbinMatchEntityHasMembers(u64),
+    CasbinMatchEntityHasStoreLocations(u64),
 }
 
 #[derive(Parser)]
@@ -123,7 +142,8 @@ fn main() {
 
     // Check that DB file exist, create if not..
     if !Path::new(&cli.db_path).is_file() {
-        connect_and_init_db(&cli.db_path).expect("can not create DB");
+        let mut db_connection = connect(&cli.db_path).expect("can not create DB");
+        init_db(&mut db_connection).expect("can not init DB");
     }
 
     // Create a connection.
@@ -757,14 +777,6 @@ fn main() {
                                     Err(e) => Err(e.to_string()),
                                 };
                             }
-                            Request::DBConnectAndInitDB(db_path) => {
-                                info!("DBConnectAndInitDB({:?})", db_path);
-
-                                response = match connect_and_init_db(db_path.as_str()) {
-                                    Ok(()) => Ok(Box::new(())),
-                                    Err(e) => Err(e.to_string()),
-                                };
-                            }
                             Request::DBCreateUpdateEntity(entity) => {
                                 info!("DBCreateUpdateEntity({:?})", entity);
 
@@ -818,6 +830,154 @@ fn main() {
 
                                 response = match get_admins(&mut db_connection) {
                                     Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::CasbinMatchPersonIsInEntity(person_id, entity_id) => {
+                                info!(
+                                    "CasbinMatchPersonIsInEntity({:?},{:?})",
+                                    person_id, entity_id
+                                );
+
+                                response = match match_person_is_in_entity(
+                                    &db_connection,
+                                    person_id,
+                                    entity_id,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::CasbinMatchPersonIsInPersonEntity(
+                                person_id,
+                                other_person_id,
+                            ) => {
+                                info!(
+                                    "CasbinMatchPersonIsInPersonEntity({:?},{:?})",
+                                    person_id, other_person_id
+                                );
+
+                                response = match match_person_is_in_person_entity(
+                                    &db_connection,
+                                    person_id,
+                                    other_person_id,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::CasbinMatchPersonIsInStoreLocationEntity(
+                                person_id,
+                                store_location_id,
+                            ) => {
+                                info!(
+                                    "CasbinMatchPersonIsInStoreLocationEntity({:?},{:?})",
+                                    person_id, store_location_id
+                                );
+
+                                response = match match_person_is_in_store_location_entity(
+                                    &db_connection,
+                                    person_id,
+                                    store_location_id,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::CasbinMatchPersonIsInStorageEntity(person_id, storage_id) => {
+                                info!(
+                                    "CasbinMatchPersonIsInStorageEntity({:?},{:?})",
+                                    person_id, storage_id
+                                );
+
+                                response = match match_person_is_in_storage_entity(
+                                    &db_connection,
+                                    person_id,
+                                    storage_id,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::CasbinMatchProductHasStorages(product_id) => {
+                                info!("CasbinMatchProductHasStorages({:?})", product_id);
+
+                                response =
+                                    match match_product_has_storages(&db_connection, product_id) {
+                                        Ok(o) => Ok(Box::new(o)),
+                                        Err(e) => Err(e.to_string()),
+                                    };
+                            }
+                            Request::CasbinMatchStoreLocationHasChildren(store_location_id) => {
+                                info!(
+                                    "CasbinMatchStoreLocationHasChildren({:?})",
+                                    store_location_id
+                                );
+
+                                response = match match_store_location_has_children(
+                                    &db_connection,
+                                    store_location_id,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::CasbinMatchStoreLocationHasStorages(store_location_id) => {
+                                info!(
+                                    "CasbinMatchStoreLocationHasStorages({:?})",
+                                    store_location_id
+                                );
+
+                                response = match match_store_location_has_storages(
+                                    &db_connection,
+                                    store_location_id,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::CasbinMatchPersonIsAdmin(person_id) => {
+                                info!("CasbinMatchPersonIsAdmin({:?})", person_id);
+
+                                response = match match_person_is_admin(&db_connection, person_id) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::CasbinMatchPersonIsManager(person_id) => {
+                                info!("CasbinMatchPersonIsManager({:?})", person_id);
+
+                                response = match match_person_is_manager(&db_connection, person_id)
+                                {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::CasbinMatchEntityHasMembers(entity_id) => {
+                                info!("CasbinMatchEntityHasMembers({:?})", entity_id);
+
+                                response = match match_entity_has_members(&db_connection, entity_id)
+                                {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::CasbinMatchEntityHasStoreLocations(entity_id) => {
+                                info!("CasbinMatchEntityHasStoreLocations({:?})", entity_id);
+
+                                response = match match_entity_has_store_locations(
+                                    &db_connection,
+                                    entity_id,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::DBDeleteEntity(entity_id) => {
+                                info!("DBDeleteEntity({:?})", entity_id);
+
+                                response = match delete_entity(&mut db_connection, entity_id) {
+                                    Ok(()) => Ok(Box::new(())),
                                     Err(e) => Err(e.to_string()),
                                 };
                             }
