@@ -5,8 +5,9 @@ use chimitheque_db::{
         match_entity_has_members, match_entity_has_store_locations, match_person_is_admin,
         match_person_is_in_entity, match_person_is_in_person_entity,
         match_person_is_in_storage_entity, match_person_is_in_store_location_entity,
-        match_person_is_manager, match_product_has_storages, match_store_location_has_children,
-        match_store_location_has_storages,
+        match_person_is_manager, match_product_has_storages, match_storage_is_in_entity,
+        match_store_location_has_children, match_store_location_has_storages,
+        match_store_location_is_in_entity,
     },
     entity::{create_update_entity, delete_entity, get_entities},
     hazardstatement::get_hazard_statements,
@@ -123,6 +124,8 @@ enum Request {
     CasbinMatchPersonIsManager(u64),
     CasbinMatchEntityHasMembers(u64),
     CasbinMatchEntityHasStoreLocations(u64),
+    CasbinMatchStorageIsInEntity(u64, u64),
+    CasbinMatchStoreLocationIsInEntity(u64, u64),
 }
 
 #[derive(Parser)]
@@ -978,6 +981,39 @@ fn main() {
 
                                 response = match delete_entity(&mut db_connection, entity_id) {
                                     Ok(()) => Ok(Box::new(())),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::CasbinMatchStorageIsInEntity(storage_id, entity_id) => {
+                                info!(
+                                    "CasbinMatchStorageIsInEntity({:?},{:?})",
+                                    storage_id, entity_id
+                                );
+
+                                response = match match_storage_is_in_entity(
+                                    &db_connection,
+                                    storage_id,
+                                    entity_id,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
+                                    Err(e) => Err(e.to_string()),
+                                };
+                            }
+                            Request::CasbinMatchStoreLocationIsInEntity(
+                                store_location_id,
+                                entity_id,
+                            ) => {
+                                info!(
+                                    "CasbinMatchStoreLocationIsInEntity({:?},{:?})",
+                                    store_location_id, entity_id
+                                );
+
+                                response = match match_store_location_is_in_entity(
+                                    &db_connection,
+                                    store_location_id,
+                                    entity_id,
+                                ) {
+                                    Ok(o) => Ok(Box::new(o)),
                                     Err(e) => Err(e.to_string()),
                                 };
                             }
