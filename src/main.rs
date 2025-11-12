@@ -46,12 +46,33 @@ use chimitheque_utils::{
     pubchem::{autocomplete, get_compound_by_name, get_product_by_name},
     string::{clean, Transform},
 };
-use std::{num::NonZeroU32, path::Path};
+use std::{
+    fmt::{Display, Formatter},
+    num::NonZeroU32,
+    path::Path,
+};
 
 use clap::Parser;
 use governor::{Quota, RateLimiter};
 use log::{debug, error, info};
 use serde::Deserialize;
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum ValidationError {
+    InvalidEmailAddress(String, String),
+}
+
+impl Display for ValidationError {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        match self {
+            ValidationError::InvalidEmailAddress(email, reason) => {
+                write!(f, "invalid email address: {} ({})", email, reason)
+            }
+        }
+    }
+}
+
+impl std::error::Error for ValidationError {}
 
 #[derive(Debug, Deserialize)]
 enum Request {
@@ -652,9 +673,21 @@ fn main() {
                             Request::DBCreateUpdatePerson(person) => {
                                 info!("DBCreateUpdatePerson({:?})", person);
 
-                                response = match create_update_person(&mut db_connection, person) {
-                                    Ok(person_id) => Ok(Box::new(person_id)),
-                                    Err(e) => Err(e.to_string()),
+                                let mut clean_person = person.clone();
+                                clean_person.person_email =
+                                    clean(&person.person_email, Transform::Lowercase);
+
+                                match clean_person.valid_email() {
+                                    Ok(_) => {
+                                        response = match create_update_person(
+                                            &mut db_connection,
+                                            clean_person,
+                                        ) {
+                                            Ok(person_id) => Ok(Box::new(person_id)),
+                                            Err(e) => Err(e.to_string()),
+                                        }
+                                    }
+                                    Err(err) => response = Err(err.to_string()),
                                 }
                             }
                             Request::DBCreateUpdateStorage(
@@ -701,13 +734,17 @@ fn main() {
                             Request::DBCreateUpdateProducer(producer) => {
                                 info!("DBCreateUpdateProducer({:?})", producer);
 
+                                let mut clean_producer = producer.clone();
+                                clean_producer.producer_label =
+                                    clean(&producer.producer_label, Transform::None);
+
                                 response = match searchable::create_update(
                                     &Producer {
                                         ..Default::default()
                                     },
                                     None,
                                     &db_connection,
-                                    &producer.producer_label,
+                                    &clean_producer.producer_label,
                                     Transform::None,
                                 ) {
                                     Ok(producer_id) => Ok(Box::new(producer_id)),
@@ -717,13 +754,17 @@ fn main() {
                             Request::DBCreateUpdateSupplier(supplier) => {
                                 info!("DBCreateUpdateSupplier({:?})", supplier);
 
+                                let mut clean_supplier = supplier.clone();
+                                clean_supplier.supplier_label =
+                                    clean(&supplier.supplier_label, Transform::None);
+
                                 response = match searchable::create_update(
                                     &Supplier {
                                         ..Default::default()
                                     },
                                     None,
                                     &db_connection,
-                                    &supplier.supplier_label,
+                                    &clean_supplier.supplier_label,
                                     Transform::None,
                                 ) {
                                     Ok(supplier_id) => Ok(Box::new(supplier_id)),
@@ -783,10 +824,15 @@ fn main() {
                             Request::DBCreateUpdateEntity(entity) => {
                                 info!("DBCreateUpdateEntity({:?})", entity);
 
-                                response = match create_update_entity(&mut db_connection, entity) {
-                                    Ok(entity_id) => Ok(Box::new(entity_id)),
-                                    Err(e) => Err(e.to_string()),
-                                };
+                                let mut clean_entity = entity.clone();
+                                clean_entity.entity_name =
+                                    clean(&entity.entity_name, Transform::None);
+
+                                response =
+                                    match create_update_entity(&mut db_connection, clean_entity) {
+                                        Ok(entity_id) => Ok(Box::new(entity_id)),
+                                        Err(e) => Err(e.to_string()),
+                                    };
                             }
                             Request::DBDeletePerson(person_id) => {
                                 info!("DBDeletePerson({:?})", person_id);
