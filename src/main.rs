@@ -32,6 +32,7 @@ use chimitheque_db::{
     unit::get_units,
     updatestatement::update_ghs_statements,
 };
+use chimitheque_pubchem::pubchem::{autocomplete, get_compound_by_name, get_product_by_name};
 use chimitheque_types::{
     casnumber::CasNumber, category::Category, cenumber::CeNumber, classofcompound::ClassOfCompound,
     empiricalformula::EmpiricalFormula, entity::Entity, linearformula::LinearFormula, name::Name,
@@ -43,7 +44,6 @@ use chimitheque_utils::{
     casnumber::is_cas_number,
     cenumber::is_ce_number,
     formula::sort_empirical_formula,
-    pubchem::{autocomplete, get_compound_by_name, get_product_by_name},
     string::{clean, Transform},
 };
 use std::{
@@ -220,14 +220,14 @@ fn main() {
                                 info!("IsCasNumber({s})");
                                 response = match is_cas_number(&s) {
                                     Ok(o) => Ok(Box::new(o)),
-                                    Err(e) => Err(e),
+                                    Err(e) => Err(e.to_string()),
                                 };
                             }
                             Request::IsCeNumber(s) => {
                                 info!("IsCeNumber({s})");
                                 response = match is_ce_number(&s) {
                                     Ok(o) => Ok(Box::new(o)),
-                                    Err(e) => Err(e),
+                                    Err(e) => Err(e.to_string()),
                                 };
                             }
                             Request::SortEmpiricalFormula(s) => {
@@ -664,10 +664,56 @@ fn main() {
                             Request::DBCreateUpdateProduct(product) => {
                                 info!("DBCreateUpdateProduct({:?})", product);
 
-                                response = match create_update_product(&mut db_connection, product)
-                                {
-                                    Ok(product_id) => Ok(Box::new(product_id)),
-                                    Err(e) => Err(e.to_string()),
+                                let mut clean_product = product.clone();
+                                if let Some(mut cas_number) = product.cas_number {
+                                    if cas_number.cas_number_id.is_none() {
+                                        cas_number.cas_number_label =
+                                            clean(&cas_number.cas_number_label, Transform::None);
+                                        clean_product.cas_number = Some(cas_number);
+                                    }
+                                }
+                                if let Some(mut ce_number) = product.ce_number {
+                                    if ce_number.ce_number_id.is_none() {
+                                        ce_number.ce_number_label =
+                                            clean(&ce_number.ce_number_label, Transform::None);
+                                        clean_product.ce_number = Some(ce_number);
+                                    }
+                                }
+                                if let Some(mut empirical_formula) = product.empirical_formula {
+                                    if empirical_formula.empirical_formula_id.is_none() {
+                                        empirical_formula.empirical_formula_label = clean(
+                                            &empirical_formula.empirical_formula_label,
+                                            Transform::None,
+                                        );
+                                        clean_product.empirical_formula = Some(empirical_formula);
+                                    }
+                                }
+                                if let Some(mut linear_formula) = product.linear_formula {
+                                    if linear_formula.linear_formula_id.is_none() {
+                                        linear_formula.linear_formula_label = clean(
+                                            &linear_formula.linear_formula_label,
+                                            Transform::None,
+                                        );
+                                        clean_product.linear_formula = Some(linear_formula);
+                                    }
+                                }
+                                if product.name.name_id.is_none() {
+                                    let name_label =
+                                        clean(&clean_product.name.name_label, Transform::Uppercase);
+                                    clean_product.name.name_label = name_label;
+                                }
+
+                                match clean_product.is_valid() {
+                                    Ok(_) => {
+                                        response = match create_update_product(
+                                            &mut db_connection,
+                                            clean_product,
+                                        ) {
+                                            Ok(product_id) => Ok(Box::new(product_id)),
+                                            Err(e) => Err(e.to_string()),
+                                        }
+                                    }
+                                    Err(err) => response = Err(err.to_string()),
                                 }
                             }
                             Request::DBCreateUpdatePerson(person) => {
@@ -677,7 +723,7 @@ fn main() {
                                 clean_person.person_email =
                                     clean(&person.person_email, Transform::Lowercase);
 
-                                match clean_person.valid_email() {
+                                match clean_person.is_valid() {
                                     Ok(_) => {
                                         response = match create_update_person(
                                             &mut db_connection,
