@@ -19,7 +19,7 @@ use chimitheque_db::{
     precautionarystatement::get_precautionary_statements,
     producer::get_producers,
     producerref::get_producer_refs,
-    product::{create_update_product, delete_product, get_products},
+    product::{create_update_product, delete_product, export_products, get_products},
     pubchemproduct::create_update_product_from_pubchem,
     searchable::{self, get_many},
     stock::compute_stock,
@@ -147,6 +147,8 @@ enum Request {
     CasbinMatchEntityHasStoreLocations(u64),
     CasbinMatchStorageIsInEntity(u64, u64),
     CasbinMatchStoreLocationIsInEntity(u64, u64),
+
+    DBExportProducts(String, u64),
 }
 
 #[derive(Parser)]
@@ -598,6 +600,20 @@ fn main() {
                                 response = match mayerr_filter {
                                     Ok(filter) => {
                                         match get_products(&db_connection, filter, person_id) {
+                                            Ok(o) => Ok(Box::new(o)),
+                                            Err(e) => Err(e.to_string()),
+                                        }
+                                    }
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBExportProducts(s, person_id) => {
+                                info!("DBExportProducts({s} {person_id})");
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => {
+                                        match export_products(&db_connection, filter, person_id) {
                                             Ok(o) => Ok(Box::new(o)),
                                             Err(e) => Err(e.to_string()),
                                         }
