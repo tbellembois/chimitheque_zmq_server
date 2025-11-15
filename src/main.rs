@@ -24,7 +24,8 @@ use chimitheque_db::{
     searchable::{self, get_many},
     stock::compute_stock,
     storage::{
-        archive_storage, create_update_storage, delete_storage, get_storages, unarchive_storage,
+        archive_storage, create_update_storage, delete_storage, export_storages, get_storages,
+        unarchive_storage,
     },
     storelocation::{create_update_store_location, delete_store_location, get_store_locations},
     supplier::get_suppliers,
@@ -149,6 +150,7 @@ enum Request {
     CasbinMatchStoreLocationIsInEntity(u64, u64),
 
     DBExportProducts(String, u64),
+    DBExportStorages(String, u64),
 }
 
 #[derive(Parser)]
@@ -628,6 +630,20 @@ fn main() {
                                 response = match mayerr_filter {
                                     Ok(filter) => {
                                         match get_storages(&db_connection, filter, person_id) {
+                                            Ok(o) => Ok(Box::new(o)),
+                                            Err(e) => Err(e.to_string()),
+                                        }
+                                    }
+                                    Err(e) => Err(e),
+                                };
+                            }
+                            Request::DBExportStorages(s, person_id) => {
+                                info!("DBExportStorages({s} {person_id})");
+                                let mayerr_filter = RequestFilter::try_from(s.as_str());
+
+                                response = match mayerr_filter {
+                                    Ok(filter) => {
+                                        match export_storages(&db_connection, filter, person_id) {
                                             Ok(o) => Ok(Box::new(o)),
                                             Err(e) => Err(e.to_string()),
                                         }
