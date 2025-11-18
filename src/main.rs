@@ -11,7 +11,7 @@ use chimitheque_db::{
     },
     entity::{create_update_entity, delete_entity, get_entities},
     hazardstatement::get_hazard_statements,
-    init::{connect, init_db},
+    init::{connect, init_db, update_ghs_statements},
     person::{
         create_update_person, delete_person, get_admins, get_people, set_person_admin,
         unset_person_admin,
@@ -31,7 +31,6 @@ use chimitheque_db::{
     supplier::get_suppliers,
     supplierref::get_supplier_refs,
     unit::get_units,
-    updatestatement::update_ghs_statements,
 };
 use chimitheque_pubchem::pubchem::{autocomplete, get_compound_by_name, get_product_by_name};
 use chimitheque_types::{
@@ -113,7 +112,6 @@ enum Request {
     DBGetProducts(String, u64),
     DBGetStorages(String, u64),
     DBGetPeople(String, u64),
-    DBUpdateGHSStatements(String),
     DBCreateUpdateEntity(Entity),
 
     DBCreateUpdateStorelocation(StoreLocation),
@@ -168,15 +166,21 @@ fn main() {
 
     debug!("arg {}", cli.db_path);
 
-    // Check that DB file exist, create if not..
-    if !Path::new(&cli.db_path).is_file() {
-        let mut db_connection = connect(&cli.db_path).expect("can not create DB");
-        init_db(&mut db_connection).expect("can not init DB");
-    }
-
     // Create a connection.
     info!("Connecting to DB.");
     let mut db_connection = connect(&cli.db_path).unwrap();
+
+    // Check that DB file exist, create if not..
+    if !Path::new(&cli.db_path).is_file() {
+        init_db(&mut db_connection).expect("can not init DB");
+    } else {
+        // Updating statements on already existing DB - panic on failure.
+        let db_transaction = db_connection.transaction().unwrap();
+
+        update_ghs_statements(&db_transaction).unwrap();
+
+        db_transaction.commit().unwrap();
+    }
 
     // Handle Ctrl+C.
     // ctrlc::set_handler(move || {
@@ -684,14 +688,6 @@ fn main() {
                                     Ok(product_id) => Ok(Box::new(product_id)),
                                     Err(e) => Err(e.to_string()),
                                 };
-                            }
-                            Request::DBUpdateGHSStatements(_s) => {
-                                info!("DBUpdateGHSStatements");
-
-                                response = match update_ghs_statements(&mut db_connection) {
-                                    Ok(_) => Ok(Box::new(())),
-                                    Err(e) => Err(e.to_string()),
-                                }
                             }
                             Request::DBCreateUpdateProduct(product) => {
                                 info!("DBCreateUpdateProduct({:?})", product);
