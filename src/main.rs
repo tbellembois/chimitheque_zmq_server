@@ -49,6 +49,7 @@ use chimitheque_utils::{
 use std::{
     fmt::{Display, Formatter},
     num::NonZeroU32,
+    os::unix::fs::MetadataExt,
     path::Path,
 };
 
@@ -171,7 +172,7 @@ fn main() {
     let mut db_connection = connect(&cli.db_path).unwrap();
 
     // Check that DB file exist, create if not..
-    if !Path::new(&cli.db_path).is_file() {
+    if Path::new(&cli.db_path).metadata().unwrap().size() == 0 {
         init_db(&mut db_connection).expect("can not init DB");
     } else {
         // Updating statements on already existing DB - panic on failure.
