@@ -693,18 +693,16 @@ fn main() {
                             Request::DBCreateUpdateProduct(product) => {
                                 info!("DBCreateUpdateProduct({:?})", product);
 
-                                let mut mayerr_sanitized_and_validated_product =
-                                    product.clone().sanitize_and_validate();
+                                let mut product = product.clone();
 
-                                match mayerr_sanitized_and_validated_product {
-                                    Ok(sanitized_and_validated_product) => {
-                                        response = match create_update_product(
-                                            &mut db_connection,
-                                            sanitized_and_validated_product,
-                                        ) {
-                                            Ok(product_id) => Ok(Box::new(product_id)),
-                                            Err(e) => Err(e.to_string()),
-                                        }
+                                match product.sanitize_and_validate() {
+                                    Ok(_) => {
+                                        response =
+                                            match create_update_product(&mut db_connection, product)
+                                            {
+                                                Ok(product_id) => Ok(Box::new(product_id)),
+                                                Err(e) => Err(e.to_string()),
+                                            }
                                     }
                                     Err(err) => response = Err(err.to_string()),
                                 }
@@ -712,18 +710,15 @@ fn main() {
                             Request::DBCreateUpdatePerson(person) => {
                                 info!("DBCreateUpdatePerson({:?})", person);
 
-                                let mut mayerr_sanitized_and_validated_person =
-                                    person.clone().sanitize_and_validate();
+                                let mut person = person.clone();
 
-                                match mayerr_sanitized_and_validated_person {
-                                    Ok(sanitized_and_validated_person) => {
-                                        response = match create_update_person(
-                                            &mut db_connection,
-                                            sanitized_and_validated_person,
-                                        ) {
-                                            Ok(person_id) => Ok(Box::new(person_id)),
-                                            Err(e) => Err(e.to_string()),
-                                        }
+                                match person.sanitize_and_validate() {
+                                    Ok(_) => {
+                                        response =
+                                            match create_update_person(&mut db_connection, person) {
+                                                Ok(person_id) => Ok(Box::new(person_id)),
+                                                Err(e) => Err(e.to_string()),
+                                            }
                                     }
                                     Err(err) => response = Err(err.to_string()),
                                 }
@@ -748,15 +743,23 @@ fn main() {
                             Request::DBCreateUpdateStorelocation(store_location) => {
                                 info!("DBCreateUpdateStorelocation({:?})", store_location);
 
-                                let mut sanitized_and_validated_store_location =
-                                    store_location.clone().sanitize_and_validate();
+                                let mut store_location = store_location.clone();
 
-                                response = match create_update_store_location(
-                                    &mut db_connection,
-                                    sanitized_and_validated_store_location,
-                                ) {
-                                    Ok(store_location_id) => Ok(Box::new(store_location_id)),
-                                    Err(e) => Err(e.to_string()),
+                                match store_location.sanitize_and_validate() {
+                                    Ok(_) => {
+                                        response = match create_update_store_location(
+                                            &mut db_connection,
+                                            store_location,
+                                        ) {
+                                            Ok(store_location_id) => {
+                                                Ok(Box::new(store_location_id))
+                                            }
+                                            Err(e) => Err(e.to_string()),
+                                        }
+                                    }
+                                    Err(err) => {
+                                        response = Err(err.to_string());
+                                    }
                                 }
                             }
                             Request::DBComputeStock(product_id, person_id) => {
@@ -771,39 +774,47 @@ fn main() {
                             Request::DBCreateUpdateProducer(producer) => {
                                 info!("DBCreateUpdateProducer({:?})", producer);
 
-                                let mut sanitized_and_validated_producer =
-                                    producer.clone().sanitize_and_validate();
+                                let mut producer = producer.clone();
 
-                                response = match searchable::create_update(
-                                    &Producer {
-                                        ..Default::default()
-                                    },
-                                    None,
-                                    &db_connection,
-                                    &sanitized_and_validated_producer.producer_label,
-                                    Transform::None,
-                                ) {
-                                    Ok(producer_id) => Ok(Box::new(producer_id)),
-                                    Err(e) => Err(e.to_string()),
+                                match producer.sanitize_and_validate() {
+                                    Ok(_) => {
+                                        response = match searchable::create_update(
+                                            &Producer {
+                                                ..Default::default()
+                                            },
+                                            None,
+                                            &db_connection,
+                                            &producer.producer_label,
+                                            Transform::None,
+                                        ) {
+                                            Ok(producer_id) => Ok(Box::new(producer_id)),
+                                            Err(e) => Err(e.to_string()),
+                                        }
+                                    }
+                                    Err(err) => response = Err(err.to_string()),
                                 }
                             }
                             Request::DBCreateUpdateSupplier(supplier) => {
                                 info!("DBCreateUpdateSupplier({:?})", supplier);
 
-                                let mut sanitized_and_validated_supplier =
-                                    supplier.clone().sanitize_and_validate();
+                                let mut supplier = supplier.clone();
 
-                                response = match searchable::create_update(
-                                    &Supplier {
-                                        ..Default::default()
-                                    },
-                                    None,
-                                    &db_connection,
-                                    &sanitized_and_validated_supplier.supplier_label,
-                                    Transform::None,
-                                ) {
-                                    Ok(supplier_id) => Ok(Box::new(supplier_id)),
-                                    Err(e) => Err(e.to_string()),
+                                match supplier.sanitize_and_validate() {
+                                    Ok(_) => {
+                                        response = match searchable::create_update(
+                                            &Supplier {
+                                                ..Default::default()
+                                            },
+                                            None,
+                                            &db_connection,
+                                            &supplier.supplier_label,
+                                            Transform::None,
+                                        ) {
+                                            Ok(supplier_id) => Ok(Box::new(supplier_id)),
+                                            Err(e) => Err(e.to_string()),
+                                        }
+                                    }
+                                    Err(err) => response = Err(err.to_string()),
                                 }
                             }
                             Request::DBToggleProductBookmark(person_id, product_id) => {
@@ -859,16 +870,20 @@ fn main() {
                             Request::DBCreateUpdateEntity(entity) => {
                                 info!("DBCreateUpdateEntity({:?})", entity);
 
-                                let mut sanitized_and_validated_entity =
-                                    entity.clone().sanitize_and_validate();
+                                let mut entity = entity.clone();
 
-                                response = match create_update_entity(
-                                    &mut db_connection,
-                                    sanitized_and_validated_entity,
-                                ) {
-                                    Ok(entity_id) => Ok(Box::new(entity_id)),
-                                    Err(e) => Err(e.to_string()),
-                                };
+                                match entity.sanitize_and_validate() {
+                                    Ok(_) => {
+                                        response = match create_update_entity(
+                                            &mut db_connection,
+                                            entity,
+                                        ) {
+                                            Ok(entity_id) => Ok(Box::new(entity_id)),
+                                            Err(e) => Err(e.to_string()),
+                                        };
+                                    }
+                                    Err(err) => response = Err(err.to_string()),
+                                }
                             }
                             Request::DBDeletePerson(person_id) => {
                                 info!("DBDeletePerson({:?})", person_id);
