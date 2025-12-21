@@ -693,50 +693,14 @@ fn main() {
                             Request::DBCreateUpdateProduct(product) => {
                                 info!("DBCreateUpdateProduct({:?})", product);
 
-                                let mut clean_product = product.clone();
-                                if let Some(mut cas_number) = product.cas_number {
-                                    if cas_number.cas_number_id.is_none() {
-                                        cas_number.cas_number_label =
-                                            clean(&cas_number.cas_number_label, Transform::None);
-                                        clean_product.cas_number = Some(cas_number);
-                                    }
-                                }
-                                if let Some(mut ce_number) = product.ce_number {
-                                    if ce_number.ce_number_id.is_none() {
-                                        ce_number.ce_number_label =
-                                            clean(&ce_number.ce_number_label, Transform::None);
-                                        clean_product.ce_number = Some(ce_number);
-                                    }
-                                }
-                                if let Some(mut empirical_formula) = product.empirical_formula {
-                                    if empirical_formula.empirical_formula_id.is_none() {
-                                        empirical_formula.empirical_formula_label = clean(
-                                            &empirical_formula.empirical_formula_label,
-                                            Transform::None,
-                                        );
-                                        clean_product.empirical_formula = Some(empirical_formula);
-                                    }
-                                }
-                                if let Some(mut linear_formula) = product.linear_formula {
-                                    if linear_formula.linear_formula_id.is_none() {
-                                        linear_formula.linear_formula_label = clean(
-                                            &linear_formula.linear_formula_label,
-                                            Transform::None,
-                                        );
-                                        clean_product.linear_formula = Some(linear_formula);
-                                    }
-                                }
-                                if product.name.name_id.is_none() {
-                                    let name_label =
-                                        clean(&clean_product.name.name_label, Transform::Uppercase);
-                                    clean_product.name.name_label = name_label;
-                                }
+                                let mut mayerr_sanitized_and_validated_product =
+                                    product.clone().sanitize_and_validate();
 
-                                match clean_product.is_valid() {
-                                    Ok(_) => {
+                                match mayerr_sanitized_and_validated_product {
+                                    Ok(sanitized_and_validated_product) => {
                                         response = match create_update_product(
                                             &mut db_connection,
-                                            clean_product,
+                                            sanitized_and_validated_product,
                                         ) {
                                             Ok(product_id) => Ok(Box::new(product_id)),
                                             Err(e) => Err(e.to_string()),
@@ -748,15 +712,14 @@ fn main() {
                             Request::DBCreateUpdatePerson(person) => {
                                 info!("DBCreateUpdatePerson({:?})", person);
 
-                                let mut clean_person = person.clone();
-                                clean_person.person_email =
-                                    clean(&person.person_email, Transform::Lowercase);
+                                let mut mayerr_sanitized_and_validated_person =
+                                    person.clone().sanitize_and_validate();
 
-                                match clean_person.is_valid() {
-                                    Ok(_) => {
+                                match mayerr_sanitized_and_validated_person {
+                                    Ok(sanitized_and_validated_person) => {
                                         response = match create_update_person(
                                             &mut db_connection,
-                                            clean_person,
+                                            sanitized_and_validated_person,
                                         ) {
                                             Ok(person_id) => Ok(Box::new(person_id)),
                                             Err(e) => Err(e.to_string()),
@@ -785,13 +748,12 @@ fn main() {
                             Request::DBCreateUpdateStorelocation(store_location) => {
                                 info!("DBCreateUpdateStorelocation({:?})", store_location);
 
-                                let mut clean_store_location = store_location.clone();
-                                clean_store_location.store_location_name =
-                                    clean(&store_location.store_location_name, Transform::None);
+                                let mut sanitized_and_validated_store_location =
+                                    store_location.clone().sanitize_and_validate();
 
                                 response = match create_update_store_location(
                                     &mut db_connection,
-                                    clean_store_location,
+                                    sanitized_and_validated_store_location,
                                 ) {
                                     Ok(store_location_id) => Ok(Box::new(store_location_id)),
                                     Err(e) => Err(e.to_string()),
@@ -809,9 +771,8 @@ fn main() {
                             Request::DBCreateUpdateProducer(producer) => {
                                 info!("DBCreateUpdateProducer({:?})", producer);
 
-                                let mut clean_producer = producer.clone();
-                                clean_producer.producer_label =
-                                    clean(&producer.producer_label, Transform::None);
+                                let mut sanitized_and_validated_producer =
+                                    producer.clone().sanitize_and_validate();
 
                                 response = match searchable::create_update(
                                     &Producer {
@@ -819,7 +780,7 @@ fn main() {
                                     },
                                     None,
                                     &db_connection,
-                                    &clean_producer.producer_label,
+                                    &sanitized_and_validated_producer.producer_label,
                                     Transform::None,
                                 ) {
                                     Ok(producer_id) => Ok(Box::new(producer_id)),
@@ -829,9 +790,8 @@ fn main() {
                             Request::DBCreateUpdateSupplier(supplier) => {
                                 info!("DBCreateUpdateSupplier({:?})", supplier);
 
-                                let mut clean_supplier = supplier.clone();
-                                clean_supplier.supplier_label =
-                                    clean(&supplier.supplier_label, Transform::None);
+                                let mut sanitized_and_validated_supplier =
+                                    supplier.clone().sanitize_and_validate();
 
                                 response = match searchable::create_update(
                                     &Supplier {
@@ -839,7 +799,7 @@ fn main() {
                                     },
                                     None,
                                     &db_connection,
-                                    &clean_supplier.supplier_label,
+                                    &sanitized_and_validated_supplier.supplier_label,
                                     Transform::None,
                                 ) {
                                     Ok(supplier_id) => Ok(Box::new(supplier_id)),
@@ -899,15 +859,16 @@ fn main() {
                             Request::DBCreateUpdateEntity(entity) => {
                                 info!("DBCreateUpdateEntity({:?})", entity);
 
-                                let mut clean_entity = entity.clone();
-                                clean_entity.entity_name =
-                                    clean(&entity.entity_name, Transform::None);
+                                let mut sanitized_and_validated_entity =
+                                    entity.clone().sanitize_and_validate();
 
-                                response =
-                                    match create_update_entity(&mut db_connection, clean_entity) {
-                                        Ok(entity_id) => Ok(Box::new(entity_id)),
-                                        Err(e) => Err(e.to_string()),
-                                    };
+                                response = match create_update_entity(
+                                    &mut db_connection,
+                                    sanitized_and_validated_entity,
+                                ) {
+                                    Ok(entity_id) => Ok(Box::new(entity_id)),
+                                    Err(e) => Err(e.to_string()),
+                                };
                             }
                             Request::DBDeletePerson(person_id) => {
                                 info!("DBDeletePerson({:?})", person_id);
