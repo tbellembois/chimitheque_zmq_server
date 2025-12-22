@@ -41,10 +41,8 @@ use chimitheque_types::{
     storage::Storage, storelocation::StoreLocation, supplier::Supplier, symbol::Symbol, tag::Tag,
 };
 use chimitheque_utils::{
-    casnumber::is_cas_number,
-    cenumber::is_ce_number,
-    formula::sort_empirical_formula,
-    string::{clean, Transform},
+    casnumber::is_cas_number, cenumber::is_ce_number, formula::sort_empirical_formula,
+    string::Transform,
 };
 use std::{
     fmt::{Display, Formatter},
